@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'; // Removed useMemo, added u
 import * as d3 from 'd3';
 import * as cloud from 'd3-cloud'; // Changed to namespace import
 import { scaleOrdinal } from 'd3-scale'; // Using d3-scale for colors potentially
+import { intlMessages } from '../intlMessages';
 
 import {
   PublicChatMessagesData,
@@ -36,16 +37,13 @@ const extractWords = (text: string): string[] => {
   const noPunctuationText = lowerCaseText.replace(/[.,!?;:]/g, '');
 
   // 4. Split by whitespace and filter out empty strings
-  const words = noPunctuationText.split(/\s+/).filter(word => word.length > 0);
+  const words = noPunctuationText.split(/\s+/).filter((word) => word.length > 0);
 
   return words;
 };
 
-export function PluginWordCloud({ pluginUuid }: PluginWordCloudProps):
+export function PluginWordCloud({ pluginApi, intl }: PluginWordCloudProps):
 React.ReactElement<PluginWordCloudProps> {
-  BbbPluginSdk.initialize(pluginUuid);
-  const pluginApi = BbbPluginSdk.getPluginApi(pluginUuid);
-
   // State to store GLOBAL word counts (for font size)
   const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
   // State to store word counts PER CATEGORY (minute) (for layout grouping)
@@ -70,13 +68,12 @@ React.ReactElement<PluginWordCloudProps> {
     pluginLogger.debug('Subscription data received:', subscriptionResponse.data);
 
     // Check if the subscription data is available and contains messages
-    if (subscriptionResponse.data?.chat_message_public &&
-        Array.isArray(subscriptionResponse.data.chat_message_public)) {
-
+    if (subscriptionResponse.data?.chat_message_public
+        && Array.isArray(subscriptionResponse.data.chat_message_public)) {
       const newMessages = subscriptionResponse.data.chat_message_public;
       let updated = false; // Flag to track if wordCounts was updated
 
-      newMessages.forEach(message => {
+      newMessages.forEach((message) => {
         // Check if the message object and ID are valid and if it hasn't been processed yet
         if (!message || !message.messageId || processedMessageIds.has(message.messageId)) {
           if (message?.messageId && processedMessageIds.has(message.messageId)) {
@@ -91,13 +88,13 @@ React.ReactElement<PluginWordCloudProps> {
         const { messageId, message: messageText } = message;
 
         // Mark message as processed immediately
-        setProcessedMessageIds(prevIds => new Set(prevIds).add(messageId));
+        setProcessedMessageIds((prevIds) => new Set(prevIds).add(messageId));
         updated = true; // Mark that we are processing new data
 
         // --- Check for /cloud command ---
         if (messageText.trim() === '/cloud') {
-          pluginLogger.info(`Received /cloud command. Incrementing category index.`);
-          setCurrentCategoryIndex(prevIndex => prevIndex + 1);
+          pluginLogger.info('Received /cloud command. Incrementing category index.');
+          setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
           // Do not process this message for words
           return; // Skip to the next message
         }
@@ -109,27 +106,26 @@ React.ReactElement<PluginWordCloudProps> {
 
         if (words.length > 0) {
           // Update GLOBAL word counts
-          setWordCounts(prevGlobalCounts => {
+          setWordCounts((prevGlobalCounts) => {
             const newGlobalCounts = { ...prevGlobalCounts };
-            words.forEach(word => {
+            words.forEach((word) => {
               newGlobalCounts[word] = (newGlobalCounts[word] || 0) + 1;
             });
             return newGlobalCounts;
           });
 
           // Update CATEGORIZED word counts using the currentCategory string
-          setCategorizedWordCounts(prevCategorizedCounts => {
+          setCategorizedWordCounts((prevCategorizedCounts) => {
             const newCategorizedCounts = { ...prevCategorizedCounts };
             // Ensure the category entry exists
             if (!newCategorizedCounts[currentCategory]) {
               newCategorizedCounts[currentCategory] = {};
             }
-            words.forEach(word => {
+            words.forEach((word) => {
               newCategorizedCounts[currentCategory][word] = (newCategorizedCounts[currentCategory][word] || 0) + 1;
             });
             return newCategorizedCounts;
           });
-
         } else {
           pluginLogger.debug(`No words extracted from message ${messageId} for category ${currentCategory}`);
         }
@@ -161,7 +157,7 @@ React.ReactElement<PluginWordCloudProps> {
   useEffect(() => {
     if (!svgRef.current) return;
 
-    const resizeObserver = new ResizeObserver(entries => {
+    const resizeObserver = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
       const { width, height } = entries[0].contentRect;
       setDimensions([width, height]);
@@ -175,7 +171,6 @@ React.ReactElement<PluginWordCloudProps> {
     setDimensions([clientWidth, clientHeight]);
     pluginLogger.debug(`Initial dimensions: ${clientWidth}x${clientHeight}`);
 
-
     // Cleanup observer on component unmount
     return () => resizeObserver.disconnect();
   }, []); // Empty dependency array ensures this runs only once on mount
@@ -184,7 +179,7 @@ React.ReactElement<PluginWordCloudProps> {
   useEffect(() => {
     // Store layout instance reference for cleanup
     // Correct type for the layout instance returned by cloud()
-    let layoutInstance = null;
+    // const layoutInstance = null;
 
     const [width, height] = dimensions; // Get current dimensions from state
 
@@ -202,10 +197,10 @@ React.ReactElement<PluginWordCloudProps> {
       // Create a placeholder SVG with centered text using current dimensions
       const placeholderSvg = d3.select(svgRef.current)
         .append('svg')
-          .attr('width', width)
-          .attr('height', height)
-          .attr('class', 'no-messages-placeholder-svg') // Add class to SVG for removal
-          .style('background-color', '#000000'); // Match background
+        .attr('width', width)
+        .attr('height', height)
+        .attr('class', 'no-messages-placeholder-svg') // Add class to SVG for removal
+        .style('background-color', '#000000'); // Match background
 
       placeholderSvg.append('text')
         .attr('x', width / 2)
@@ -214,7 +209,7 @@ React.ReactElement<PluginWordCloudProps> {
         .style('fill', '#ccc') // Light gray color for dark background
         .style('font-size', '24px')
         .style('text-anchor', 'middle') // Center text horizontally
-        .text('Type something in chat!');
+        .text(intl.formatMessage(intlMessages.startTyping)); // Use intl for message
 
       return; // Exit after drawing placeholder
     }
@@ -279,7 +274,7 @@ React.ReactElement<PluginWordCloudProps> {
           text: wordText,
           size: calculateDynamicFontSize(globalCount), // Size based on GLOBAL count
           count: globalCount, // Store global count in WordData for consistency with size
-          category: category, // The category index string ('0', '1', '2', ...)
+          category, // The category index string ('0', '1', '2', ...)
           // Let d3-cloud calculate x, y, rotate etc.
         });
       });
@@ -290,7 +285,7 @@ React.ReactElement<PluginWordCloudProps> {
     // --- Category-Based Layout ---
     // Group the generated wordsData by category (minute string)
     const wordsByCategory = wordsData.reduce((acc, word) => {
-      const category = word.category;
+      const { category } = word;
       if (!acc[category]) {
         acc[category] = [];
       }
@@ -336,10 +331,10 @@ React.ReactElement<PluginWordCloudProps> {
           .padding(1) // Maybe smaller padding within cells
           .rotate(() => (~~(Math.random() * 6) - 3) * 15) // Less rotation?
           .font('Tahoma')
-          .fontSize(d => d.size || 10) // Use size from WordData
+          .fontSize((d) => d.size || 10) // Use size from WordData
           .on('end', (positionedWords: WordData[]) => {
             // Adjust positions relative to the cell's offset
-            const adjustedWords = positionedWords.map(word => ({
+            const adjustedWords = positionedWords.map((word) => ({
               ...word,
               x: (word.x || 0) + offsetX + cellWidth / 2, // Center within cell + offset
               y: (word.y || 0) + offsetY + cellHeight / 2, // Center within cell + offset
@@ -353,11 +348,11 @@ React.ReactElement<PluginWordCloudProps> {
     });
 
     // Wait for all category layouts to complete
-    Promise.all(allLayoutPromises).then(results => {
+    Promise.all(allLayoutPromises).then((results) => {
       const combinedWords = results.flat(); // Combine words from all categories
       pluginLogger.info(`All category layouts finished. Total words: ${combinedWords.length}`);
       draw(combinedWords, width, height, margin); // Call draw with all positioned words
-    }).catch(error => {
+    }).catch((error) => {
       pluginLogger.error('Error during category layout:', error);
     });
     // --- End Category-Based Layout ---
@@ -392,23 +387,23 @@ React.ReactElement<PluginWordCloudProps> {
         .selectAll<SVGSVGElement, unknown>('svg') // Use selectAll for potential existing SVG
         .data([null]) // Bind data to ensure only one SVG
         .join('svg') // Use join for enter/update/exit logic on the SVG itself
-          .attr('width', svgWidth) // Use passed width
-          .attr('height', svgHeight) // Use passed height
-          .style('background-color', '#000000'); // Set background to black
+        .attr('width', svgWidth) // Use passed width
+        .attr('height', svgHeight) // Use passed height
+        .style('background-color', '#000000'); // Set background to black
 
       // Select the main group element, translate by the margin
       const g = svg.selectAll<SVGGElement, unknown>('g')
         .data([null])
         .join('g')
-          // Translate group by the margin, as word coords are now relative to layout area top-left
-          .attr('transform', `translate(${svgMargin}, ${svgMargin})`);
+      // Translate group by the margin, as word coords are now relative to layout area top-left
+        .attr('transform', `translate(${svgMargin}, ${svgMargin})`);
 
       // Define color scale within draw function scope to use helper
       const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
       // D3 data join for text elements, using WordData
       const text = g.selectAll<SVGTextElement, WordData>('text')
-        .data(words, d => d.text || ''); // Use word text as key
+        .data(words, (d) => d.text || ''); // Use word text as key
 
       // --- Exit Selection ---
       text.exit()
@@ -421,29 +416,29 @@ React.ReactElement<PluginWordCloudProps> {
       // --- Update Selection ---
       text.transition() // Smoothly transition existing words
         .duration(1600) // Match previous transition duration
-         // Use calculated x, y directly; they already include offsets
-        .attr('transform', d => `translate(${d.x || 0},${d.y || 0}) rotate(${d.rotate || 0})`)
-        .attr('font-size', d => `${d.size}px`)
+      // Use calculated x, y directly; they already include offsets
+        .attr('transform', (d) => `translate(${d.x || 0},${d.y || 0}) rotate(${d.rotate || 0})`)
+        .attr('font-size', (d) => `${d.size}px`)
         // Ensure the fill color is light enough
-        .style('fill', d => ensureLightColor(colorScale(d.text || '')));
+        .style('fill', (d) => ensureLightColor(colorScale(d.text || '')));
 
       // --- Enter Selection ---
       text.enter() // Add text.enter() back here
         .append('text')
-          .style('font-family', 'Impact') // Match font used in layout
-          // Ensure the initial fill color is light enough
-          .style('fill', (d: WordData) => ensureLightColor(colorScale(d.text || '')))
-          .attr('text-anchor', 'middle')
-           // Use calculated x, y directly for initial position
-          .attr('transform', (d: WordData) => `translate(${d.x || 0},${d.y || 0}) rotate(${d.rotate || 0})`)
-          .text((d: WordData) => d.text || '') // Add type WordData
-          // Initial state for transition
-          .style('fill-opacity', 1e-6) // Start transparent for fade-in
-          .attr('font-size', 1)
+        .style('font-family', 'Impact') // Match font used in layout
+      // Ensure the initial fill color is light enough
+        .style('fill', (d: WordData) => ensureLightColor(colorScale(d.text || '')))
+        .attr('text-anchor', 'middle')
+      // Use calculated x, y directly for initial position
+        .attr('transform', (d: WordData) => `translate(${d.x || 0},${d.y || 0}) rotate(${d.rotate || 0})`)
+        .text((d: WordData) => d.text || '') // Add type WordData
+      // Initial state for transition
+        .style('fill-opacity', 1e-6) // Start transparent for fade-in
+        .attr('font-size', 1)
         .transition() // Fade in and grow new words
-          .duration(1600) // Match previous transition duration
-          .style('fill-opacity', 1)
-          .attr('font-size', (d: WordData) => `${d.size}px`); // Add type WordData
+        .duration(1600) // Match previous transition duration
+        .style('fill-opacity', 1)
+        .attr('font-size', (d: WordData) => `${d.size}px`); // Add type WordData
 
       pluginLogger.debug('D3 drawing complete.');
     }
@@ -458,7 +453,6 @@ React.ReactElement<PluginWordCloudProps> {
       //   pluginLogger.debug('Cleanup triggered for word cloud effect (no active layout).');
       // }
     };
-
   }, [wordCounts, categorizedWordCounts, dimensions]); // Re-run effect when counts or dimensions change
 
   // --- Rendering Logic ---
