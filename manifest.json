@@ -4,6 +4,17 @@
   "javascriptEntrypointUrl": "PluginWordCloud.js",
   "dataChannels": [
     {
+      "name": "WordCloudEnableChannel",
+      "pushPermission":  [
+        "moderator",
+        "presenter"
+      ],
+      "replaceOrDeletePermission": [
+        "moderator",
+        "sender"
+      ]
+    },
+    {
       "name": "LocationShareEnableChannel",
       "pushPermission": [
         "moderator"
