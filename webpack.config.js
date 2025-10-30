@@ -53,6 +53,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.js', '.jsx', '.tsx', '.ts'],
+    alias: {
+      '@locales': path.resolve(__dirname, './locales'),
+    },
   },
   plugins: [
     new CopyWebpackPlugin({

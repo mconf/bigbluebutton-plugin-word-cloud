@@ -1,0 +1,6 @@
+{
+  "app.wordCloud.title": "Word Cloud",
+  "app.wordCloud.stopSharing": "Close Word Cloud",
+  "app.wordCloud.startTyping": "Type something in the chat!",
+  "app.wordCloud.tooltip": "Share Word Cloud based on chat messages"
+}

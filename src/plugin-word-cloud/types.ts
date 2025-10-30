@@ -1,3 +1,6 @@
+import { PluginApi } from 'bigbluebutton-html-plugin-sdk';
+import { IntlShape } from 'react-intl';
+
 export interface ChatMessage {
   messageId: string;
   message: string;
@@ -13,5 +16,6 @@ export interface PublicChatMessagesData {
 }
 
 export interface PluginWordCloudProps {
-  pluginUuid: string;
+  pluginApi: PluginApi,
+  intl: IntlShape,
 }

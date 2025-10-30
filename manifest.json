@@ -1,5 +1,27 @@
 {
   "requiredSdkVersion": "~0.1.2",
   "name": "PluginWordCloud",
-  "javascriptEntrypointUrl": "PluginWordCloud.js"
+  "javascriptEntrypointUrl": "PluginWordCloud.js",
+  "dataChannels": [
+    {
+      "name": "WordCloudEnableChannel",
+      "pushPermission":  [
+        "moderator",
+        "presenter"
+      ],
+      "replaceOrDeletePermission": [
+        "moderator",
+        "sender"
+      ]
+    },
+    {
+      "name": "LocationShareEnableChannel",
+      "pushPermission": [
+        "moderator"
+      ],
+      "replaceOrDeletePermission": [
+        "moderator"
+      ]
+    }
+  ]
 }
