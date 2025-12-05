@@ -75,7 +75,8 @@ React.ReactElement<PluginWordCloudProps> {
 
       newMessages.forEach((message) => {
         // Check if the message object and ID are valid and if it hasn't been processed yet
-        if (!message || !message.messageId || processedMessageIds.has(message.messageId)) {
+        // eslint-disable-next-line max-len
+        if (!message || !message.messageId || !message.message || processedMessageIds.has(message.messageId)) {
           if (message?.messageId && processedMessageIds.has(message.messageId)) {
             pluginLogger.debug(`Skipping already processed message ${message.messageId}`);
           } else {
