@@ -5,7 +5,6 @@ import {
   GenericContentSidekickArea,
   GenericContentMainArea,
   IntlLocaleUiDataNames,
-  pluginLogger,
 } from 'bigbluebutton-html-plugin-sdk';
 import { WordCloudPluginProps } from './types';
 import { intlMessages } from '../../intlMessages';
@@ -26,10 +25,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   const { isActive } = useWordCloudStore();
 
-  pluginLogger.info('WordCloudPlugin - isActive:', isActive);
-
   useEffect(() => {
-    pluginLogger.info('WordCloudPlugin - useEffect triggered, isActive:', isActive);
     const sidekickArea = new GenericContentSidekickArea({
       contentFunction: (element: HTMLElement) => {
         const root = ReactDOM.createRoot(element);

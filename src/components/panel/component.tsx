@@ -1,7 +1,4 @@
 import * as React from 'react';
-import {
-  pluginLogger,
-} from 'bigbluebutton-html-plugin-sdk';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
@@ -12,23 +9,16 @@ function Panel({ pluginApi, intl }: PanelProps): JSX.Element {
 
   const { isActive, setIsActive } = useWordCloudStore();
 
-  pluginLogger.info('Panel - isActive:', isActive);
-
   const handleStart = () => {
-    pluginLogger.info('Panel - handleStart called');
     setIsActive(true);
   };
 
   const handleStop = () => {
-    pluginLogger.info('Panel - handleStop called');
     setIsActive(false);
   };
 
   const renderModeratorContent = () => {
     const isModeratorOrPresenter = currentUser?.role === 'MODERATOR' || currentUser?.presenter;
-
-    pluginLogger.info('Panel - currentUser:', currentUser);
-    pluginLogger.info('Panel - isModeratorOrPresenter:', isModeratorOrPresenter);
 
     if (!isModeratorOrPresenter) {
       return (
