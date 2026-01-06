@@ -1,4 +1,4 @@
-import { BbbPluginSdk, pluginLogger } from 'bigbluebutton-html-plugin-sdk';
+import { BbbPluginSdk } from 'bigbluebutton-html-plugin-sdk';
 import * as React from 'react';
 import { useEffect, useState, useRef } from 'react'; // Removed useMemo, added useRef
 import * as d3 from 'd3';
@@ -65,7 +65,6 @@ React.ReactElement<PluginWordCloudProps> {
   // Removed useEffect for clearing timeouts
 
   useEffect(() => {
-    pluginLogger.debug('Subscription data received:', subscriptionResponse.data);
 
     // Check if the subscription data is available and contains messages
     if (subscriptionResponse.data?.chat_message_public
@@ -76,11 +75,6 @@ React.ReactElement<PluginWordCloudProps> {
       newMessages.forEach((message) => {
         // Check if the message object and ID are valid and if it hasn't been processed yet
         if (!message || !message.messageId || processedMessageIds.has(message.messageId)) {
-          if (message?.messageId && processedMessageIds.has(message.messageId)) {
-            pluginLogger.debug(`Skipping already processed message ${message.messageId}`);
-          } else {
-            pluginLogger.debug('Skipping invalid or already processed message:', message);
-          }
           return; // Skip this message
         }
 
@@ -93,7 +87,6 @@ React.ReactElement<PluginWordCloudProps> {
 
         // --- Check for /cloud command ---
         if (messageText.trim() === '/cloud') {
-          pluginLogger.info('Received /cloud command. Incrementing category index.');
           setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
           // Do not process this message for words
           return; // Skip to the next message
@@ -101,7 +94,6 @@ React.ReactElement<PluginWordCloudProps> {
 
         // --- Process regular message ---
         const currentCategory = String(currentCategoryIndex); // Use current index as category string
-        pluginLogger.info(`Processing message ${messageId} for category ${currentCategory}: ${messageText}`);
         const words = extractWords(messageText);
 
         if (words.length > 0) {
@@ -126,14 +118,9 @@ React.ReactElement<PluginWordCloudProps> {
             });
             return newCategorizedCounts;
           });
-        } else {
-          pluginLogger.debug(`No words extracted from message ${messageId} for category ${currentCategory}`);
         }
       });
 
-      if (updated) {
-        pluginLogger.info('Global and categorized word counts updated.');
-      }
     }
     // Depend only on the subscription data
   }, [subscriptionResponse.data]); // Removed processedMessageIds from dependencies
@@ -161,7 +148,6 @@ React.ReactElement<PluginWordCloudProps> {
       if (!entries || entries.length === 0) return;
       const { width, height } = entries[0].contentRect;
       setDimensions([width, height]);
-      pluginLogger.debug(`Resized to: ${width}x${height}`);
     });
 
     resizeObserver.observe(svgRef.current);
@@ -169,7 +155,6 @@ React.ReactElement<PluginWordCloudProps> {
     // Set initial dimensions
     const { clientWidth, clientHeight } = svgRef.current;
     setDimensions([clientWidth, clientHeight]);
-    pluginLogger.debug(`Initial dimensions: ${clientWidth}x${clientHeight}`);
 
     // Cleanup observer on component unmount
     return () => resizeObserver.disconnect();
@@ -184,13 +169,11 @@ React.ReactElement<PluginWordCloudProps> {
     const [width, height] = dimensions; // Get current dimensions from state
 
     if (!svgRef.current || width === 0 || height === 0) {
-      pluginLogger.debug('Skipping D3 layout: No ref or zero dimensions');
       return; // Don't run if ref isn't ready or dimensions are zero
     }
 
     if (Object.keys(wordCounts).length === 0) {
       // Handle the "no words" case - draw placeholder
-      pluginLogger.debug('No words, drawing placeholder.');
       // Remove any existing SVG (either word cloud or placeholder)
       d3.select(svgRef.current).select('svg').remove();
 
@@ -215,7 +198,6 @@ React.ReactElement<PluginWordCloudProps> {
     }
 
     // --- Proceed with Word Cloud Drawing ---
-    pluginLogger.debug(`Running D3 layout with dimensions: ${width}x${height}`);
 
     // Clear any placeholder SVG if it exists
     d3.select(svgRef.current).select('.no-messages-placeholder-svg').remove();
@@ -227,7 +209,6 @@ React.ReactElement<PluginWordCloudProps> {
 
     // Ensure layout dimensions are not negative
     if (layoutWidth <= 0 || layoutHeight <= 0) {
-      pluginLogger.warn('Layout dimensions too small or negative, skipping draw.');
       return;
     }
 
@@ -243,7 +224,6 @@ React.ReactElement<PluginWordCloudProps> {
       // boostFactor goes from 0 (at threshold-1 words) to 1 (at 1 word)
       const boostFactor = (wordCountThreshold - numUniqueWords) / (wordCountThreshold - 1);
       effectiveMinFontSize = minFontSize + (midFontSize - minFontSize) * boostFactor;
-      pluginLogger.debug(`Adjusted min font size to ${effectiveMinFontSize.toFixed(2)} for ${numUniqueWords} words.`);
     }
 
     // Calculate min/max counts for normalization (needed for font size scaling)
@@ -280,8 +260,6 @@ React.ReactElement<PluginWordCloudProps> {
       });
     });
 
-    pluginLogger.debug(`Prepared ${wordsData.length} WordData entries for layout.`);
-
     // --- Category-Based Layout ---
     // Group the generated wordsData by category (minute string)
     const wordsByCategory = wordsData.reduce((acc, word) => {
@@ -297,7 +275,6 @@ React.ReactElement<PluginWordCloudProps> {
     const numCategories = categories.length;
 
     if (numCategories === 0) {
-      pluginLogger.warn('No categories found, skipping layout.');
       // Potentially draw placeholder or clear SVG if needed, though handled earlier
       return;
     }
@@ -307,8 +284,6 @@ React.ReactElement<PluginWordCloudProps> {
     const rows = Math.ceil(numCategories / cols);
     const cellWidth = layoutWidth / cols;
     const cellHeight = layoutHeight / rows;
-
-    pluginLogger.debug(`Grid: ${cols}x${rows}, Cell: ${cellWidth.toFixed(1)}x${cellHeight.toFixed(1)}`);
 
     const allLayoutPromises: Promise<WordData[]>[] = [];
     const allPositionedWords: WordData[] = []; // Array to collect results
@@ -321,8 +296,6 @@ React.ReactElement<PluginWordCloudProps> {
       const rowIndex = Math.floor(index / cols);
       const offsetX = colIndex * cellWidth;
       const offsetY = rowIndex * cellHeight;
-
-      pluginLogger.debug(`Layout for category '${category}' in cell [${rowIndex}, ${colIndex}] offset (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})`);
 
       const layoutPromise = new Promise<WordData[]>((resolve) => {
         const categoryLayout = cloud<WordData>() // Specify WordData type here
@@ -339,7 +312,6 @@ React.ReactElement<PluginWordCloudProps> {
               x: (word.x || 0) + offsetX + cellWidth / 2, // Center within cell + offset
               y: (word.y || 0) + offsetY + cellHeight / 2, // Center within cell + offset
             }));
-            pluginLogger.debug(`Layout finished for category '${category}', ${adjustedWords.length} words positioned.`);
             resolve(adjustedWords);
           });
         categoryLayout.start();
@@ -350,10 +322,7 @@ React.ReactElement<PluginWordCloudProps> {
     // Wait for all category layouts to complete
     Promise.all(allLayoutPromises).then((results) => {
       const combinedWords = results.flat(); // Combine words from all categories
-      pluginLogger.info(`All category layouts finished. Total words: ${combinedWords.length}`);
       draw(combinedWords, width, height, margin); // Call draw with all positioned words
-    }).catch((error) => {
-      pluginLogger.error('Error during category layout:', error);
     });
     // --- End Category-Based Layout ---
 
@@ -372,7 +341,6 @@ React.ReactElement<PluginWordCloudProps> {
         }
         return colorString; // Return original color if light enough
       } catch (e) {
-        pluginLogger.warn('Could not parse color string:', colorString, e);
         return defaultLightColor; // Fallback on error
       }
     };
@@ -380,7 +348,6 @@ React.ReactElement<PluginWordCloudProps> {
     // Draw function: Renders the words using D3, now receives dimensions/margin
     // This function remains largely the same, but now receives words already positioned globally
     function draw(words: WordData[], svgWidth: number, svgHeight: number, svgMargin: number) {
-      pluginLogger.debug('Drawing combined words:', words.length);
 
       // Select the container, ensure SVG exists, or create it
       const svg = d3.select(svgRef.current)
@@ -439,18 +406,12 @@ React.ReactElement<PluginWordCloudProps> {
         .duration(1600) // Match previous transition duration
         .style('fill-opacity', 1)
         .attr('font-size', (d: WordData) => `${d.size}px`); // Add type WordData
-
-      pluginLogger.debug('D3 drawing complete.');
     }
 
     // Cleanup function for when the component unmounts or dependencies change
     return () => {
-      pluginLogger.debug('Cleanup triggered for word cloud effect.');
       // if (layoutInstance) {
       //   layoutInstance.stop(); // Stop the layout process if it's still running
-      //   pluginLogger.debug('D3 layout stopped on cleanup.');
-      // } else {
-      //   pluginLogger.debug('Cleanup triggered for word cloud effect (no active layout).');
       // }
     };
   }, [wordCounts, categorizedWordCounts, dimensions]); // Re-run effect when counts or dimensions change
@@ -465,6 +426,8 @@ React.ReactElement<PluginWordCloudProps> {
         height: '100%',
         overflow: 'hidden', // Prevent scrollbars if SVG slightly overflows
         boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 2,
       }}
     />
   );

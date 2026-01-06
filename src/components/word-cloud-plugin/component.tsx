@@ -49,6 +49,33 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       const mainArea = new GenericContentMainArea({
         ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
         contentFunction: (element: HTMLElement) => {
+          // Force z-index with inline !important on all parent elements
+          const forceZIndex = () => {
+            let current: HTMLElement | null = element;
+            while (current && current !== document.body) {
+              current.style.setProperty('z-index', '2', 'important');
+              current = current.parentElement;
+            }
+          };
+
+          // Initial force
+          forceZIndex();
+
+          // Watch for any style changes on parents and force z-index again
+          let current: HTMLElement | null = element;
+          while (current && current !== document.body) {
+            const el = current;
+            const observer = new MutationObserver(() => {
+              el.style.setProperty('z-index', '2', 'important');
+            });
+            observer.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+            current = current.parentElement;
+          }
+
+          // Also force after a delay in case SDK sets it later
+          setTimeout(forceZIndex, 100);
+          setTimeout(forceZIndex, 500);
+
           const root = ReactDOM.createRoot(element);
           root.render(
             <React.StrictMode>
