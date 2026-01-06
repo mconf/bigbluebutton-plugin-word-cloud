@@ -1,5 +1,5 @@
 export enum WordCloudChannel {
-  WORDCLOUD = 'WORDCLOUD',
+  WORDCLOUD = 'WordCloudEnableChannel',
 }
 
 export enum WordCloudSubChannels {

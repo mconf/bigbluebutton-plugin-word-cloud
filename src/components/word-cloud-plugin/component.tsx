@@ -5,16 +5,27 @@ import {
   GenericContentSidekickArea,
   GenericContentMainArea,
   IntlLocaleUiDataNames,
+  DataChannelTypes,
 } from 'bigbluebutton-html-plugin-sdk';
 import { WordCloudPluginProps } from './types';
 import { intlMessages } from '../../intlMessages';
 import Panel from '../panel/component';
 import { PluginWordCloud } from '../../plugin-word-cloud/component';
-import { useWordCloudStore } from '../../context/WordCloudStore';
+import { WordCloudChannel, WordCloudSubChannels } from '../enums';
+import { WordCloudStartStopType } from '../panel/types';
 
 const NAVIGATION_SIDEBAR_BUTTON_ICON = 'plugin';
 
 function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.ReactNode {
+  const {
+    data: wordCloudStartStop,
+    pushEntry: wordCloudStartStopDispatcher,
+  } = pluginApi.useDataChannel<WordCloudStartStopType>(
+    WordCloudChannel.WORDCLOUD,
+    DataChannelTypes.LATEST_ITEM,
+    WordCloudSubChannels.START_STOP,
+  );
+
   const currentLocale = pluginApi.useUiData(IntlLocaleUiDataNames.CURRENT_LOCALE, {
     locale: 'en',
     fallbackLocale: 'en',
@@ -23,7 +34,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const sidekickContentId = useRef<string | undefined>('');
   const mainAreaContentId = useRef<string | undefined>('');
 
-  const { isActive } = useWordCloudStore();
+  // Derive isActive from the data channel
+  const isActive = wordCloudStartStop?.data?.[0]?.payloadJson?.message === 'start';
 
   useEffect(() => {
     const sidekickArea = new GenericContentSidekickArea({
@@ -31,7 +43,12 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         const root = ReactDOM.createRoot(element);
         root.render(
           <React.StrictMode>
-            <Panel intl={intl} pluginApi={pluginApi} />
+            <Panel
+              intl={intl}
+              pluginApi={pluginApi}
+              isActive={isActive}
+              onStartStop={wordCloudStartStopDispatcher}
+            />
           </React.StrictMode>,
         );
         return root;
@@ -103,6 +120,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     intl.formatMessage(intlMessages.navBarTitle),
     currentLocale,
     isActive,
+    wordCloudStartStopDispatcher,
   ]);
 
   return null;

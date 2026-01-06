@@ -1,11 +1,13 @@
 import { PluginApi } from 'bigbluebutton-html-plugin-sdk';
 import { IntlShape } from 'react-intl';
 
+export interface WordCloudStartStopType {
+  message: 'start' | 'stop';
+}
+
 export interface PanelProps {
   pluginApi: PluginApi;
   intl: IntlShape;
-}
-
-export interface WordCloudStartStopType {
-  message: 'start' | 'stop';
+  isActive: boolean;
+  onStartStop: (data: WordCloudStartStopType) => void;
 }

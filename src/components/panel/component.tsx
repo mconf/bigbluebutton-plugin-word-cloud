@@ -2,19 +2,21 @@ import * as React from 'react';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
-import { useWordCloudStore } from '../../context/WordCloudStore';
 
-function Panel({ pluginApi, intl }: PanelProps): JSX.Element {
+function Panel({
+  pluginApi,
+  intl,
+  isActive,
+  onStartStop,
+}: PanelProps): JSX.Element {
   const { data: currentUser } = pluginApi.useCurrentUser();
 
-  const { isActive, setIsActive } = useWordCloudStore();
-
   const handleStart = () => {
-    setIsActive(true);
+    onStartStop({ message: 'start' });
   };
 
   const handleStop = () => {
-    setIsActive(false);
+    onStartStop({ message: 'stop' });
   };
 
   const renderModeratorContent = () => {
