@@ -1,4 +1,3 @@
-import { BbbPluginSdk } from 'bigbluebutton-html-plugin-sdk';
 import * as React from 'react';
 import { useEffect, useState, useRef } from 'react'; // Removed useMemo, added useRef
 import * as d3 from 'd3';

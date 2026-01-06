@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'wordcloud-icons';
+  src: url('../assets/cloud.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.icon-bbb-cloud:before {
+  font-family: 'wordcloud-icons' !important;
+  content: "\e1013";
+}

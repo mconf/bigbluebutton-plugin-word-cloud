@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom/client';
 import { BbbPluginSdk, PluginApi } from 'bigbluebutton-html-plugin-sdk';
 import WordCloudPlugin from './components/word-cloud-plugin/component';
 import { useInjectIntl } from './hooks/injectIntl';
+import './main.css';
 
 const uuid = document.currentScript?.getAttribute('uuid') || 'root';
 

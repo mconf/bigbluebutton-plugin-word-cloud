@@ -14,7 +14,7 @@ import { PluginWordCloud } from '../../plugin-word-cloud/component';
 import { WordCloudChannel, WordCloudSubChannels } from '../enums';
 import { WordCloudStartStopType } from '../panel/types';
 
-const NAVIGATION_SIDEBAR_BUTTON_ICON = 'plugin';
+const NAVIGATION_SIDEBAR_BUTTON_ICON = 'cloud';
 
 function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.ReactNode {
   const {
