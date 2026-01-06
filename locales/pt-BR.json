@@ -1,6 +1,13 @@
 {
   "app.wordCloud.title": "Nuvem de Palavras",
+  "app.wordCloud.navBarTitle": "Aplicativos",
   "app.wordCloud.stopSharing": "Fechar Nuvem de Palavras",
   "app.wordCloud.startTyping": "Escreva algo no chat!",
-  "app.wordCloud.tooltip": "Compartilhar Nuvem de Palavras baseada nas mensagens do chat"
+  "app.wordCloud.tooltip": "Compartilhar Nuvem de Palavras baseada nas mensagens do chat",
+  "app.wordCloud.description": "A Nuvem de Palavras exibe as palavras mais usadas do chat em um formato visual. Inicie o plugin para começar a coletar palavras.",
+  "app.wordCloud.description.attendee": "A Nuvem de Palavras é controlada pelo moderador ou apresentador da sessão. A nuvem aparecerá quando o moderador iniciar o recurso.",
+  "app.wordCloud.startButton": "Iniciar Nuvem de Palavras",
+  "app.wordCloud.stopButton": "Encerrar Nuvem de Palavras",
+  "app.wordCloud.status.active": "Nuvem de Palavras ativa",
+  "app.wordCloud.status.inactive": "Nuvem de Palavras inativa"
 }
