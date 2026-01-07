@@ -38,6 +38,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   // Derive isActive from the data channel
   const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
   const isActive = payloadJson?.message === 'start';
+  const currentStartFromNow = payloadJson?.startFromNow;
   
   // Set activatedAt when starting with startFromNow option
   if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
@@ -58,6 +59,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
               intl={intl}
               pluginApi={pluginApi}
               isActive={isActive}
+              currentStartFromNow={currentStartFromNow}
               onStartStop={wordCloudStartStopDispatcher}
             />
           </React.StrictMode>,
@@ -132,6 +134,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     intl.formatMessage(intlMessages.navBarTitle),
     currentLocale,
     isActive,
+    currentStartFromNow,
     activatedAt,
     wordCloudStartStopDispatcher,
   ]);

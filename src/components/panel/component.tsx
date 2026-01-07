@@ -8,10 +8,11 @@ function Panel({
   pluginApi,
   intl,
   isActive,
+  currentStartFromNow,
   onStartStop,
 }: PanelProps): JSX.Element {
   const { data: currentUser } = pluginApi.useCurrentUser();
-  const [startFromNow, setStartFromNow] = useState(false);
+  const [startFromNow, setStartFromNow] = useState(currentStartFromNow ?? false);
 
   const handleStart = () => {
     onStartStop({
@@ -55,16 +56,15 @@ function Panel({
             </Styled.StatusText>
           </Styled.StatusIndicator>
 
-          {!isActive && (
-            <Styled.CheckboxContainer>
-              <Styled.Checkbox
-                type="checkbox"
-                checked={startFromNow}
-                onChange={(e) => setStartFromNow(e.target.checked)}
-              />
-              {intl.formatMessage(intlMessages.startFromNow)}
-            </Styled.CheckboxContainer>
-          )}
+          <Styled.CheckboxContainer>
+            <Styled.Checkbox
+              type="checkbox"
+              checked={startFromNow}
+              onChange={(e) => setStartFromNow(e.target.checked)}
+              disabled={isActive}
+            />
+            {intl.formatMessage(intlMessages.startFromNow)}
+          </Styled.CheckboxContainer>
 
           <Styled.ButtonsContainer>
             <Styled.Button

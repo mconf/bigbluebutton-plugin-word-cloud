@@ -10,5 +10,6 @@ export interface PanelProps {
   pluginApi: PluginApi;
   intl: IntlShape;
   isActive: boolean;
+  currentStartFromNow?: boolean;
   onStartStop: (data: WordCloudStartStopType) => void;
 }
