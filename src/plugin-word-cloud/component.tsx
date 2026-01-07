@@ -73,7 +73,7 @@ React.ReactElement<PluginWordCloudProps> {
 
       newMessages.forEach((message) => {
         // Check if the message object and ID are valid and if it hasn't been processed yet
-        if (!message || !message.messageId || processedMessageIds.has(message.messageId)) {
+        if (!message || !message.messageId || !message.message || processedMessageIds.has(message.messageId)) {
           return; // Skip this message
         }
 
@@ -385,6 +385,7 @@ React.ReactElement<PluginWordCloudProps> {
       // Use calculated x, y directly; they already include offsets
         .attr('transform', (d) => `translate(${d.x || 0},${d.y || 0}) rotate(${d.rotate || 0})`)
         .attr('font-size', (d) => `${d.size}px`)
+        .style('fill-opacity', 1)
         // Ensure the fill color is light enough
         .style('fill', (d) => ensureLightColor(colorScale(d.text || '')));
 
