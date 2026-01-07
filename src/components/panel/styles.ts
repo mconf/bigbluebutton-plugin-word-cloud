@@ -24,16 +24,20 @@ const Container = styled.div`
 
 const Section = styled.div`
   padding: .5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 const SectionContent = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0;
   margin-right: auto;
   margin-left: auto;
   width: 100%;
+  flex: 1;
 `;
 
 const Description = styled.p`
@@ -52,7 +56,8 @@ const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
 `;
 
 const Button = styled.button<{ variant?: 'primary' | 'danger' }>`
@@ -105,6 +110,7 @@ const CheckboxContainer = styled.label`
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  margin-top: 1.5rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
   color: ${colorGrayLight};
@@ -121,6 +127,14 @@ const Checkbox = styled.input`
   accent-color: ${colorPrimary};
 `;
 
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid ${colorGrayLight};
+  opacity: 0.3;
+  margin: 0 0 1rem 0;
+  width: 100%;
+`;
+
 export default {
   Container,
   Section,
@@ -133,5 +147,6 @@ export default {
   StatusText,
   CheckboxContainer,
   Checkbox,
+  Divider,
   colorPrimary,
 };

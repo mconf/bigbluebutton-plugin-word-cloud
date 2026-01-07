@@ -47,15 +47,6 @@ function Panel({
             {intl.formatMessage(intlMessages.description)}
           </Styled.Description>
 
-          <Styled.StatusIndicator isActive={isActive}>
-            <Styled.StatusDot isActive={isActive} />
-            <Styled.StatusText>
-              {isActive
-                ? intl.formatMessage(intlMessages.statusActive)
-                : intl.formatMessage(intlMessages.statusInactive)}
-            </Styled.StatusText>
-          </Styled.StatusIndicator>
-
           <Styled.CheckboxContainer>
             <Styled.Checkbox
               type="checkbox"
@@ -67,6 +58,7 @@ function Panel({
           </Styled.CheckboxContainer>
 
           <Styled.ButtonsContainer>
+            <Styled.Divider />
             <Styled.Button
               variant="primary"
               onClick={handleStart}
