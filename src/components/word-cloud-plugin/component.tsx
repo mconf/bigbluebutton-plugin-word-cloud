@@ -33,9 +33,20 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   const sidekickContentId = useRef<string | undefined>('');
   const mainAreaContentId = useRef<string | undefined>('');
+  const activatedAtRef = useRef<number | undefined>(undefined);
 
   // Derive isActive from the data channel
-  const isActive = wordCloudStartStop?.data?.[0]?.payloadJson?.message === 'start';
+  const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
+  const isActive = payloadJson?.message === 'start';
+  
+  // Set activatedAt when starting with startFromNow option
+  if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
+    activatedAtRef.current = Date.now();
+  } else if (!isActive) {
+    activatedAtRef.current = undefined;
+  }
+  
+  const activatedAt = activatedAtRef.current;
 
   useEffect(() => {
     const sidekickArea = new GenericContentSidekickArea({
@@ -99,6 +110,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
               <PluginWordCloud
                 pluginApi={pluginApi}
                 intl={intl}
+                activatedAt={activatedAt}
               />
             </React.StrictMode>,
           );
@@ -120,6 +132,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     intl.formatMessage(intlMessages.navBarTitle),
     currentLocale,
     isActive,
+    activatedAt,
     wordCloudStartStopDispatcher,
   ]);
 

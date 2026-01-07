@@ -100,6 +100,27 @@ const StatusText = styled.span`
   color: ${colorGrayLight};
 `;
 
+const CheckboxContainer = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: ${colorGrayLight};
+
+  &:hover {
+    color: ${colorPrimary};
+  }
+`;
+
+const Checkbox = styled.input`
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: ${colorPrimary};
+`;
+
 export default {
   Container,
   Section,
@@ -110,5 +131,7 @@ export default {
   StatusIndicator,
   StatusDot,
   StatusText,
+  CheckboxContainer,
+  Checkbox,
   colorPrimary,
 };

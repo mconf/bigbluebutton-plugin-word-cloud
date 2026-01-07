@@ -41,7 +41,7 @@ const extractWords = (text: string): string[] => {
   return words;
 };
 
-export function PluginWordCloud({ pluginApi, intl }: PluginWordCloudProps):
+export function PluginWordCloud({ pluginApi, intl, activatedAt }: PluginWordCloudProps):
 React.ReactElement<PluginWordCloudProps> {
   // State to store GLOBAL word counts (for font size)
   const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
@@ -75,6 +75,14 @@ React.ReactElement<PluginWordCloudProps> {
         // Check if the message object and ID are valid and if it hasn't been processed yet
         if (!message || !message.messageId || !message.message || processedMessageIds.has(message.messageId)) {
           return; // Skip this message
+        }
+
+        // Skip messages created before activation if activatedAt is set
+        if (activatedAt && message.createdAt) {
+          const messageTimestamp = new Date(message.createdAt).getTime();
+          if (messageTimestamp < activatedAt) {
+            return; // Skip this message
+          }
         }
 
         // Destructure needed fields

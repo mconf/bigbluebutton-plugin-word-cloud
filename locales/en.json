@@ -9,5 +9,6 @@
   "app.wordCloud.startButton": "Start Word Cloud",
   "app.wordCloud.stopButton": "Stop Word Cloud",
   "app.wordCloud.status.active": "Word Cloud is active",
-  "app.wordCloud.status.inactive": "Word Cloud is inactive"
+  "app.wordCloud.status.inactive": "Word Cloud is inactive",
+  "app.wordCloud.startFromNow": "Count words only from now"
 }

@@ -9,5 +9,6 @@
   "app.wordCloud.startButton": "Iniciar Nuvem de Palavras",
   "app.wordCloud.stopButton": "Encerrar Nuvem de Palavras",
   "app.wordCloud.status.active": "Nuvem de Palavras ativa",
-  "app.wordCloud.status.inactive": "Nuvem de Palavras inativa"
+  "app.wordCloud.status.inactive": "Nuvem de Palavras inativa",
+  "app.wordCloud.startFromNow": "Contar palavras apenas a partir de agora"
 }

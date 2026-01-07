@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
@@ -10,9 +11,13 @@ function Panel({
   onStartStop,
 }: PanelProps): JSX.Element {
   const { data: currentUser } = pluginApi.useCurrentUser();
+  const [startFromNow, setStartFromNow] = useState(false);
 
   const handleStart = () => {
-    onStartStop({ message: 'start' });
+    onStartStop({
+      message: 'start',
+      startFromNow,
+    });
   };
 
   const handleStop = () => {
@@ -49,6 +54,17 @@ function Panel({
                 : intl.formatMessage(intlMessages.statusInactive)}
             </Styled.StatusText>
           </Styled.StatusIndicator>
+
+          {!isActive && (
+            <Styled.CheckboxContainer>
+              <Styled.Checkbox
+                type="checkbox"
+                checked={startFromNow}
+                onChange={(e) => setStartFromNow(e.target.checked)}
+              />
+              {intl.formatMessage(intlMessages.startFromNow)}
+            </Styled.CheckboxContainer>
+          )}
 
           <Styled.ButtonsContainer>
             <Styled.Button

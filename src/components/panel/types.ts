@@ -3,6 +3,7 @@ import { IntlShape } from 'react-intl';
 
 export interface WordCloudStartStopType {
   message: 'start' | 'stop';
+  startFromNow?: boolean;
 }
 
 export interface PanelProps {

@@ -45,4 +45,8 @@ export const intlMessages = defineMessages({
     id: 'app.wordCloud.status.inactive',
     description: 'Status when word cloud is inactive',
   },
+  startFromNow: {
+    id: 'app.wordCloud.startFromNow',
+    description: 'Option to count words only from activation moment',
+  },
 });
