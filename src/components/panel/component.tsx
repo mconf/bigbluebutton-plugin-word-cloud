@@ -47,7 +47,7 @@ function Panel({
             {intl.formatMessage(intlMessages.description)}
           </Styled.Description>
 
-          <Styled.CheckboxContainer>
+          <Styled.CheckboxContainer disabled={isActive}>
             <Styled.Checkbox
               type="checkbox"
               checked={startFromNow}

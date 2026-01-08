@@ -19,4 +19,5 @@ export interface PluginWordCloudProps {
   pluginApi: PluginApi,
   intl: IntlShape,
   activatedAt?: number,
+
 }

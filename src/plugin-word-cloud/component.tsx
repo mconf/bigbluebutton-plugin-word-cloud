@@ -61,8 +61,6 @@ React.ReactElement<PluginWordCloudProps> {
   );
   // Removed userListBasicInf hook as sender info is not needed for word counts
 
-  // Removed useEffect for clearing timeouts
-
   useEffect(() => {
 
     // Check if the subscription data is available and contains messages

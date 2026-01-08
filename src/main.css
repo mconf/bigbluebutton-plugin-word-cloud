@@ -9,3 +9,12 @@
   font-family: 'wordcloud-icons' !important;
   content: "\e1013";
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

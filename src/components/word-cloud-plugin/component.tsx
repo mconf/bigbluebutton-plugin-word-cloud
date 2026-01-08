@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import {
   GenericContentSidekickArea,
@@ -15,6 +15,7 @@ import { WordCloudChannel, WordCloudSubChannels } from '../enums';
 import { WordCloudStartStopType } from '../panel/types';
 
 const NAVIGATION_SIDEBAR_BUTTON_ICON = 'cloud';
+const FADE_DURATION = 200; // ms
 
 function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.ReactNode {
   const {
@@ -31,9 +32,18 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     fallbackLocale: 'en',
   });
 
+  // Refs for content IDs and React roots
   const sidekickContentId = useRef<string | undefined>('');
   const mainAreaContentId = useRef<string | undefined>('');
+  const sidekickRootRef = useRef<ReactDOM.Root | null>(null);
+  const mainAreaRootRef = useRef<ReactDOM.Root | null>(null);
+  const mainAreaElementRef = useRef<HTMLElement | null>(null);
+  
+  // State tracking refs
   const activatedAtRef = useRef<number | undefined>(undefined);
+  const prevIsActiveRef = useRef<boolean | undefined>(undefined);
+  const isInitializedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   // Derive isActive from the data channel
   const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
@@ -49,95 +59,238 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   
   const activatedAt = activatedAtRef.current;
 
+  // Memoize intl messages
+  const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
+  const navBarTitleMessage = useMemo(() => intl.formatMessage(intlMessages.navBarTitle), [currentLocale]);
+
+  // Stable dispatcher reference
+  const dispatcherRef = useRef(wordCloudStartStopDispatcher);
+  dispatcherRef.current = wordCloudStartStopDispatcher;
+
+  const stableDispatcher = useCallback((data: WordCloudStartStopType) => {
+    dispatcherRef.current(data);
+  }, []);
+
+  // Store current values in refs for use in content functions
+  const isActiveRef = useRef(isActive);
+  const currentStartFromNowRef = useRef(currentStartFromNow);
+  const activatedAtRefValue = useRef(activatedAt);
+  const intlRef = useRef(intl);
+  const pluginApiRef = useRef(pluginApi);
+  
+  isActiveRef.current = isActive;
+  currentStartFromNowRef.current = currentStartFromNow;
+  activatedAtRefValue.current = activatedAt;
+  intlRef.current = intl;
+  pluginApiRef.current = pluginApi;
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // STABLE content function for sidekick - created ONCE and stored in ref
+  const sidekickContentFunctionRef = useRef<((element: HTMLElement) => ReactDOM.Root) | null>(null);
+  if (!sidekickContentFunctionRef.current) {
+    sidekickContentFunctionRef.current = (element: HTMLElement) => {
+      const root = ReactDOM.createRoot(element);
+      sidekickRootRef.current = root;
+      root.render(
+        <React.StrictMode>
+          <Panel
+            intl={intlRef.current}
+            pluginApi={pluginApiRef.current}
+            isActive={isActiveRef.current}
+            currentStartFromNow={currentStartFromNowRef.current}
+            onStartStop={stableDispatcher}
+          />
+        </React.StrictMode>,
+      );
+      return root;
+    };
+  }
+
+  // STABLE content function for main area - created ONCE and stored in ref
+  const mainAreaContentFunctionRef = useRef<((element: HTMLElement) => ReactDOM.Root) | null>(null);
+  if (!mainAreaContentFunctionRef.current) {
+    mainAreaContentFunctionRef.current = (element: HTMLElement) => {
+      mainAreaElementRef.current = element;
+      
+      // Start completely hidden
+      element.style.opacity = '0';
+      element.style.transition = `opacity ${FADE_DURATION}ms ease-in-out`;
+      
+      // Force z-index on all parents
+      const forceZIndex = () => {
+        let current: HTMLElement | null = element;
+        while (current && current !== document.body) {
+          current.style.setProperty('z-index', '2', 'important');
+          current = current.parentElement;
+        }
+      };
+      forceZIndex();
+
+      // Watch for style changes
+      let current: HTMLElement | null = element;
+      while (current && current !== document.body) {
+        const el = current;
+        const observer = new MutationObserver(() => {
+          el.style.setProperty('z-index', '2', 'important');
+        });
+        observer.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+        current = current.parentElement;
+      }
+
+      setTimeout(forceZIndex, 100);
+      setTimeout(forceZIndex, 500);
+
+      const root = ReactDOM.createRoot(element);
+      mainAreaRootRef.current = root;
+      
+      root.render(
+        <React.StrictMode>
+          <PluginWordCloud
+            pluginApi={pluginApiRef.current}
+            intl={intlRef.current}
+            activatedAt={activatedAtRefValue.current}
+          />
+        </React.StrictMode>,
+      );
+      
+      // Fade in after content is rendered and a small delay
+      setTimeout(() => {
+        if (isMountedRef.current && element) {
+          element.style.opacity = '1';
+        }
+      }, 50);
+      
+      return root;
+    };
+  }
+
+  // Effect to update sidekick panel content
+  useEffect(() => {
+    if (sidekickRootRef.current) {
+      sidekickRootRef.current.render(
+        <React.StrictMode>
+          <Panel
+            intl={intl}
+            pluginApi={pluginApi}
+            isActive={isActive}
+            currentStartFromNow={currentStartFromNow}
+            onStartStop={stableDispatcher}
+          />
+        </React.StrictMode>,
+      );
+    }
+  }, [isActive, currentStartFromNow, stableDispatcher, intl, pluginApi]);
+
+  // Effect to update main area content
+  useEffect(() => {
+    if (mainAreaRootRef.current && isActive) {
+      mainAreaRootRef.current.render(
+        <React.StrictMode>
+          <PluginWordCloud
+            pluginApi={pluginApi}
+            intl={intl}
+            activatedAt={activatedAt}
+          />
+        </React.StrictMode>,
+      );
+    }
+  }, [activatedAt, isActive, intl, pluginApi]);
+
+  // Initial setup - register sidekick only, mainArea will be added on activation
   useEffect(() => {
     const sidekickArea = new GenericContentSidekickArea({
-      contentFunction: (element: HTMLElement) => {
-        const root = ReactDOM.createRoot(element);
-        root.render(
-          <React.StrictMode>
-            <Panel
-              intl={intl}
-              pluginApi={pluginApi}
-              isActive={isActive}
-              currentStartFromNow={currentStartFromNow}
-              onStartStop={wordCloudStartStopDispatcher}
-            />
-          </React.StrictMode>,
-        );
-        return root;
-      },
-      name: intl.formatMessage(intlMessages.title),
-      section: intl.formatMessage(intlMessages.navBarTitle),
+      contentFunction: sidekickContentFunctionRef.current!,
+      name: titleMessage,
+      section: navBarTitleMessage,
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
-      ...(sidekickContentId.current && { id: sidekickContentId.current }),
     });
 
     const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
-
-    if (isActive) {
+    
+    // If already active on mount, also add main area
+    if (isActiveRef.current) {
       const mainArea = new GenericContentMainArea({
-        ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
-        contentFunction: (element: HTMLElement) => {
-          // Force z-index with inline !important on all parent elements
-          const forceZIndex = () => {
-            let current: HTMLElement | null = element;
-            while (current && current !== document.body) {
-              current.style.setProperty('z-index', '2', 'important');
-              current = current.parentElement;
-            }
-          };
-
-          // Initial force
-          forceZIndex();
-
-          // Watch for any style changes on parents and force z-index again
-          let current: HTMLElement | null = element;
-          while (current && current !== document.body) {
-            const el = current;
-            const observer = new MutationObserver(() => {
-              el.style.setProperty('z-index', '2', 'important');
-            });
-            observer.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
-            current = current.parentElement;
-          }
-
-          // Also force after a delay in case SDK sets it later
-          setTimeout(forceZIndex, 100);
-          setTimeout(forceZIndex, 500);
-
-          const root = ReactDOM.createRoot(element);
-          root.render(
-            <React.StrictMode>
-              <PluginWordCloud
-                pluginApi={pluginApi}
-                intl={intl}
-                activatedAt={activatedAt}
-              />
-            </React.StrictMode>,
-          );
-          return root;
-        },
+        contentFunction: mainAreaContentFunctionRef.current!,
       });
       items.push(mainArea);
     }
 
     const generatedIds = pluginApi.setGenericContentItems(items);
-    [sidekickContentId.current] = generatedIds;
-    if (isActive && generatedIds.length > 1) {
-      [, mainAreaContentId.current] = generatedIds;
-    } else {
-      mainAreaContentId.current = undefined;
+    sidekickContentId.current = generatedIds[0];
+    if (isActiveRef.current && generatedIds.length > 1) {
+      mainAreaContentId.current = generatedIds[1];
     }
-  }, [
-    intl.formatMessage(intlMessages.title),
-    intl.formatMessage(intlMessages.navBarTitle),
-    currentLocale,
-    isActive,
-    currentStartFromNow,
-    activatedAt,
-    wordCloudStartStopDispatcher,
-  ]);
+    
+    isInitializedRef.current = true;
+    prevIsActiveRef.current = isActiveRef.current;
+  }, [titleMessage, navBarTitleMessage, pluginApi]);
+
+  // Effect to handle isActive state transitions
+  useEffect(() => {
+    if (!isInitializedRef.current) return;
+    if (prevIsActiveRef.current === isActive) return;
+
+    const wasActive = prevIsActiveRef.current;
+    prevIsActiveRef.current = isActive;
+
+    // Transition: inactive -> active
+    if (!wasActive && isActive) {
+      // Fade out presentation area first (via opacity), then add our content
+      const sidekickArea = new GenericContentSidekickArea({
+        id: sidekickContentId.current,
+        contentFunction: sidekickContentFunctionRef.current!,
+        name: titleMessage,
+        section: navBarTitleMessage,
+        open: false,
+        buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+      });
+      const mainArea = new GenericContentMainArea({
+        ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
+        contentFunction: mainAreaContentFunctionRef.current!,
+      });
+      
+      const newIds = pluginApi.setGenericContentItems([sidekickArea, mainArea]);
+      sidekickContentId.current = newIds[0];
+      mainAreaContentId.current = newIds[1];
+    }
+
+    // Transition: active -> inactive
+    if (wasActive && !isActive) {
+      // Fade out first, then remove
+      if (mainAreaElementRef.current) {
+        mainAreaElementRef.current.style.opacity = '0';
+      }
+      
+      // Wait for fade out, then remove mainArea
+      setTimeout(() => {
+        if (!isMountedRef.current) return;
+        
+        mainAreaRootRef.current = null;
+        mainAreaElementRef.current = null;
+        
+        const sidekickArea = new GenericContentSidekickArea({
+          id: sidekickContentId.current,
+          contentFunction: sidekickContentFunctionRef.current!,
+          name: titleMessage,
+          section: navBarTitleMessage,
+          open: false,
+          buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+        });
+        
+        const newIds = pluginApi.setGenericContentItems([sidekickArea]);
+        sidekickContentId.current = newIds[0];
+        mainAreaContentId.current = undefined;
+      }, FADE_DURATION);
+    }
+  }, [isActive, titleMessage, navBarTitleMessage, pluginApi]);
 
   return null;
 }

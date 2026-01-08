@@ -105,26 +105,31 @@ const StatusText = styled.span`
   color: ${colorGrayLight};
 `;
 
-const CheckboxContainer = styled.label`
+const CheckboxContainer = styled.label<{ disabled?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   margin-top: 1.5rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
   color: ${colorGrayLight};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 
   &:hover {
-    color: ${colorPrimary};
+    color: ${(props) => (props.disabled ? colorGrayLight : colorPrimary)};
   }
 `;
 
 const Checkbox = styled.input`
   width: 18px;
   height: 18px;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   accent-color: ${colorPrimary};
+
+  &:disabled {
+    opacity: 0.5;
+  }
 `;
 
 const Divider = styled.hr`
