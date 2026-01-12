@@ -1,14 +1,9 @@
 {
   "app.wordCloud.title": "Word Cloud",
-  "app.wordCloud.navBarTitle": "Apps",
-  "app.wordCloud.stopSharing": "Close Word Cloud",
   "app.wordCloud.startTyping": "Type something in the chat!",
-  "app.wordCloud.tooltip": "Share Word Cloud based on chat messages",
   "app.wordCloud.description": "The word cloud plugin analyzes all messages sent in the chat and generates a visualization with the most used terms. Once started, it considers the entire conversation history and displays words in different sizes according to their frequency of use.",
   "app.wordCloud.description.attendee": "The Word Cloud is controlled by the session moderator or presenter. The cloud will appear when the moderator starts the feature.",
   "app.wordCloud.startButton": "Start Word Cloud",
   "app.wordCloud.stopButton": "Stop Word Cloud",
-  "app.wordCloud.status.active": "Word Cloud is active",
-  "app.wordCloud.status.inactive": "Word Cloud is inactive",
   "app.wordCloud.startFromNow": "Count words only from now"
 }

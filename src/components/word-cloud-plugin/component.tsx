@@ -60,8 +60,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   // Memoize intl messages
   const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
-  // eslint-disable-next-line max-len
-  const navBarTitleMessage = useMemo(() => intl.formatMessage(intlMessages.navBarTitle), [currentLocale]);
 
   // Stable dispatcher reference
   const dispatcherRef = useRef(wordCloudStartStopDispatcher);
@@ -184,7 +182,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     const sidekickArea = new GenericContentSidekickArea({
       contentFunction: sidekickContentFunctionRef.current!,
       name: titleMessage,
-      section: navBarTitleMessage,
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
     });
@@ -207,7 +204,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
     isInitializedRef.current = true;
     prevIsActiveRef.current = isActiveRef.current;
-  }, [titleMessage, navBarTitleMessage, pluginApi]);
+  }, [titleMessage, pluginApi]);
 
   // Effect to handle isActive state transitions
   useEffect(() => {
@@ -224,7 +221,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         id: sidekickContentId.current,
         contentFunction: sidekickContentFunctionRef.current!,
         name: titleMessage,
-        section: navBarTitleMessage,
         open: false,
         buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
       });
@@ -256,7 +252,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
           id: sidekickContentId.current,
           contentFunction: sidekickContentFunctionRef.current!,
           name: titleMessage,
-          section: navBarTitleMessage,
           open: false,
           buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
         });
@@ -266,7 +261,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         mainAreaContentId.current = undefined;
       }, FADE_DURATION);
     }
-  }, [isActive, titleMessage, navBarTitleMessage, pluginApi]);
+  }, [isActive, titleMessage, pluginApi]);
 
   return null;
 }
