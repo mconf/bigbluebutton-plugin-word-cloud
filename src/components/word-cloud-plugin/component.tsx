@@ -40,24 +40,23 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const mainAreaElementRef = useRef<HTMLElement | null>(null);
 
   // State tracking refs
-  const activatedAtRef = useRef<number | undefined>(undefined);
   const prevIsActiveRef = useRef<boolean | undefined>(undefined);
   const isInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
 
   // Derive isActive from the data channel
-  const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
+  const dataChannelEntry = wordCloudStartStop?.data?.[0];
+  const payloadJson = dataChannelEntry?.payloadJson;
   const isActive = payloadJson?.message === 'start';
   const currentStartFromNow = payloadJson?.startFromNow;
 
-  // Set activatedAt when starting with startFromNow option
-  if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
-    activatedAtRef.current = Date.now();
-  } else if (!isActive) {
-    activatedAtRef.current = undefined;
+  // Use the createdAt timestamp from the data channel entry when startFromNow is enabled
+  // This ensures all users see the same timestamp regardless of when they joined
+  let activatedAt: number | undefined;
+  if (isActive && currentStartFromNow && dataChannelEntry?.createdAt) {
+    // Convert ISO string timestamp to milliseconds
+    activatedAt = new Date(dataChannelEntry.createdAt).getTime();
   }
-
-  const activatedAt = activatedAtRef.current;
 
   // Memoize intl messages
   const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
@@ -75,13 +74,13 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   // Store current values in refs for use in content functions
   const isActiveRef = useRef(isActive);
   const currentStartFromNowRef = useRef(currentStartFromNow);
-  const activatedAtRefValue = useRef(activatedAt);
-  const intlRef = useRef(intl);
+  const activatedAtRef = useRef(activatedAt);
+  const intlRef = useRef(pluginApi);
   const pluginApiRef = useRef(pluginApi);
 
   isActiveRef.current = isActive;
   currentStartFromNowRef.current = currentStartFromNow;
-  activatedAtRefValue.current = activatedAt;
+  activatedAtRef.current = activatedAt;
   intlRef.current = intl;
   pluginApiRef.current = pluginApi;
 
@@ -132,7 +131,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
           <PluginWordCloud
             pluginApi={pluginApiRef.current}
             intl={intlRef.current}
-            activatedAt={activatedAtRefValue.current}
+            activatedAt={activatedAtRef.current}
           />
         </React.StrictMode>,
       );

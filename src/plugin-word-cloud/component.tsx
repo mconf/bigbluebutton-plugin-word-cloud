@@ -69,8 +69,17 @@ React.ReactElement<PluginWordCloudProps> {
   );
   // Removed userListBasicInf hook as sender info is not needed for word counts
 
+  // Reset state when activatedAt changes (plugin restarted with "start from now")
   useEffect(() => {
+    if (activatedAt) {
+      setWordCounts({});
+      setCategorizedWordCounts({});
+      setProcessedMessageIds(new Set());
+      setCurrentCategoryIndex(0);
+    }
+  }, [activatedAt]);
 
+  useEffect(() => {
     // Check if the subscription data is available and contains messages
     if (subscriptionResponse.data?.chat_message_public
         && Array.isArray(subscriptionResponse.data.chat_message_public)) {

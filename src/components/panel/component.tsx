@@ -15,10 +15,11 @@ function Panel({
   const [startFromNow, setStartFromNow] = useState(currentStartFromNow ?? false);
 
   const handleStart = () => {
-    onStartStop({
-      message: 'start',
+    const payload = {
+      message: 'start' as const,
       startFromNow,
-    });
+    };
+    onStartStop(payload);
   };
 
   const handleStop = () => {
