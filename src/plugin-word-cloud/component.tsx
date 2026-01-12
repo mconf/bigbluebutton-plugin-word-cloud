@@ -433,7 +433,7 @@ React.ReactElement<PluginWordCloudProps> {
         overflow: 'hidden', // Prevent scrollbars if SVG slightly overflows
         boxSizing: 'border-box',
         position: 'relative',
-        zIndex: 2,
+        zIndex: 2, // Keep lower than reactions overlay
       }}
     />
   );
