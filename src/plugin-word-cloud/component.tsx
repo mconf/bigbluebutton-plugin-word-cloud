@@ -35,16 +35,22 @@ const extractWords = (text: string): string[] => {
   // 2. Convert to lowercase (emojis are generally unaffected, but standard words are)
   const lowerCaseText = spacedText.toLowerCase();
 
-  // 3. Remove common punctuation
-  const noPunctuationText = lowerCaseText.replace(/[.,!?;:]/g, '');
+  // 3. Split by whitespace first to get individual tokens
+  const tokens = lowerCaseText.split(/\s+/);
 
-  // 4. Split by whitespace and filter out empty strings and URLs
-  const words = noPunctuationText.split(/\s+/).filter((word) => {
-    if (word.length === 0) return false;
-    // Filter out URLs
-    if (urlRegex.test(word)) return false;
-    return true;
-  });
+  // 4. Filter and process each token
+  const words = tokens
+    .filter((token) => {
+      if (token.length === 0) return false;
+      // Filter out URLs BEFORE removing punctuation
+      if (urlRegex.test(token)) return false;
+      return true;
+    })
+    .map((token) => {
+      // Remove common punctuation from each word
+      return token.replace(/[.,!?;:]/g, '');
+    })
+    .filter((word) => word.length > 0); // Filter out empty strings after punctuation removal
 
   return words;
 };
