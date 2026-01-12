@@ -23,6 +23,9 @@ interface WordData extends cloud.Word {
 // Using Unicode property escapes: \p{Emoji_Presentation}, \p{Emoji} with VS16, Regional Indicators for flags
 const emojiIsolatingRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}\p{Regional_Indicator})+|\p{Emoji})/gu;
 
+// Regex to match URLs (http, https, ftp, www, or domain-like patterns)
+const urlRegex = /^(https?:\/\/|ftp:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/i;
+
 const extractWords = (text: string): string[] => {
   if (!text) return [];
 
@@ -35,8 +38,13 @@ const extractWords = (text: string): string[] => {
   // 3. Remove common punctuation
   const noPunctuationText = lowerCaseText.replace(/[.,!?;:]/g, '');
 
-  // 4. Split by whitespace and filter out empty strings
-  const words = noPunctuationText.split(/\s+/).filter((word) => word.length > 0);
+  // 4. Split by whitespace and filter out empty strings and URLs
+  const words = noPunctuationText.split(/\s+/).filter((word) => {
+    if (word.length === 0) return false;
+    // Filter out URLs
+    if (urlRegex.test(word)) return false;
+    return true;
+  });
 
   return words;
 };
