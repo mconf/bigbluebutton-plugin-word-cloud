@@ -5,5 +5,7 @@
   "app.wordCloud.description.attendee": "The Word Cloud is controlled by the session moderator or presenter. The cloud will appear when the moderator starts the feature.",
   "app.wordCloud.startButton": "Start Word Cloud",
   "app.wordCloud.stopButton": "Stop Word Cloud",
-  "app.wordCloud.startFromNow": "Count words only from now"
+  "app.wordCloud.startFromNow": "Count words only from now",
+  "app.wordCloud.stopSharing": "Stop Word Cloud",
+  "app.wordCloud.tooltip": "Start Word Cloud"
 }

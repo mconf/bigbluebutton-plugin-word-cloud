@@ -73,7 +73,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const isActiveRef = useRef(isActive);
   const currentStartFromNowRef = useRef(currentStartFromNow);
   const activatedAtRef = useRef(activatedAt);
-  const intlRef = useRef(pluginApi);
+  const intlRef = useRef(intl);
   const pluginApiRef = useRef(pluginApi);
 
   isActiveRef.current = isActive;
@@ -99,8 +99,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       root.render(
         <React.StrictMode>
           <Panel
-            intl={intlRef.current}
             pluginApi={pluginApiRef.current}
+            intl={intlRef.current}
             isActive={isActiveRef.current}
             currentStartFromNow={currentStartFromNowRef.current}
             onStartStop={stableDispatcher}
@@ -127,8 +127,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       root.render(
         <React.StrictMode>
           <PluginWordCloud
-            pluginApi={pluginApiRef.current}
             intl={intlRef.current}
+            pluginApi={pluginApiRef.current}
             activatedAt={activatedAtRef.current}
           />
         </React.StrictMode>,
@@ -184,6 +184,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       name: titleMessage,
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+      section: 'wordcloud',
     });
 
     const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
@@ -223,6 +224,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         name: titleMessage,
         open: false,
         buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+        section: 'wordcloud',
       });
       const mainArea = new GenericContentMainArea({
         ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
@@ -254,6 +256,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
           name: titleMessage,
           open: false,
           buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+          section: 'wordcloud',
         });
 
         const newIds = pluginApi.setGenericContentItems([sidekickArea]);

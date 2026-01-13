@@ -29,4 +29,12 @@ export const intlMessages = defineMessages({
     id: 'app.wordCloud.startFromNow',
     description: 'Option to count words only from activation moment',
   },
+  stopSharing: {
+    id: 'app.wordCloud.stopSharing',
+    description: 'Button to stop sharing word cloud',
+  },
+  tooltip: {
+    id: 'app.wordCloud.tooltip',
+    description: 'Tooltip for starting word cloud',
+  },
 });
