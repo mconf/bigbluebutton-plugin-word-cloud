@@ -75,12 +75,14 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const activatedAtRef = useRef(activatedAt);
   const intlRef = useRef(intl);
   const pluginApiRef = useRef(pluginApi);
+  const titleMessageRef = useRef(titleMessage);
 
   isActiveRef.current = isActive;
   currentStartFromNowRef.current = currentStartFromNow;
   activatedAtRef.current = activatedAt;
   intlRef.current = intl;
   pluginApiRef.current = pluginApi;
+  titleMessageRef.current = titleMessage;
 
   // Cleanup on unmount
   useEffect(() => {
@@ -177,11 +179,38 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     }
   }, [activatedAt, isActive, intl, pluginApi]);
 
+  // Effect to update sidekick area name when locale changes
+  useEffect(() => {
+    if (!isInitializedRef.current || !sidekickContentId.current) return;
+
+    const sidekickArea = new GenericContentSidekickArea({
+      id: sidekickContentId.current,
+      contentFunction: sidekickContentFunctionRef.current!,
+      name: titleMessageRef.current,
+      open: false,
+      buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+      section: 'wordcloud',
+    });
+
+    const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
+
+    // If active, also include main area
+    if (isActive && mainAreaContentId.current) {
+      const mainArea = new GenericContentMainArea({
+        id: mainAreaContentId.current,
+        contentFunction: mainAreaContentFunctionRef.current!,
+      });
+      items.push(mainArea);
+    }
+
+    pluginApi.setGenericContentItems(items);
+  }, [titleMessage, pluginApi, isActive]);
+
   // Initial setup - register sidekick only, mainArea will be added on activation
   useEffect(() => {
     const sidekickArea = new GenericContentSidekickArea({
       contentFunction: sidekickContentFunctionRef.current!,
-      name: titleMessage,
+      name: titleMessageRef.current,
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
       section: 'wordcloud',
@@ -205,7 +234,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
     isInitializedRef.current = true;
     prevIsActiveRef.current = isActiveRef.current;
-  }, [titleMessage, pluginApi]);
+  }, [pluginApi]); // Remove titleMessage dependency to run only once
 
   // Effect to handle isActive state transitions
   useEffect(() => {
@@ -221,7 +250,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       const sidekickArea = new GenericContentSidekickArea({
         id: sidekickContentId.current,
         contentFunction: sidekickContentFunctionRef.current!,
-        name: titleMessage,
+        name: titleMessageRef.current,
         open: false,
         buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
         section: 'wordcloud',
@@ -253,7 +282,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         const sidekickArea = new GenericContentSidekickArea({
           id: sidekickContentId.current,
           contentFunction: sidekickContentFunctionRef.current!,
-          name: titleMessage,
+          name: titleMessageRef.current,
           open: false,
           buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
           section: 'wordcloud',
@@ -264,7 +293,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         mainAreaContentId.current = undefined;
       }, FADE_DURATION);
     }
-  }, [isActive, titleMessage, pluginApi]);
+  }, [isActive, pluginApi]); // Remove titleMessage to avoid conflicts with locale update effect
 
   return null;
 }
