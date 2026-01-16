@@ -39,7 +39,7 @@ function Panel({
       return (
         <Styled.Section>
           <Styled.SectionContent>
-            <BBBTypography variant="text2">
+            <BBBTypography variant="default">
               {intl.formatMessage(intlMessages.descriptionAttendee)}
             </BBBTypography>
           </Styled.SectionContent>
@@ -50,7 +50,7 @@ function Panel({
     return (
       <Styled.Section>
         <Styled.SectionContent>
-          <BBBTypography variant="text2">
+          <BBBTypography variant="default">
             {intl.formatMessage(intlMessages.description)}
           </BBBTypography>
 
