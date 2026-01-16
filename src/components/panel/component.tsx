@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
+import {
+  BBButton,
+  BBBToggle,
+  BBBTypography,
+  BBBDivider,
+} from 'bbb-ui-components-react';
 
 function Panel({
   pluginApi,
@@ -33,9 +39,9 @@ function Panel({
       return (
         <Styled.Section>
           <Styled.SectionContent>
-            <Styled.Description>
+            <BBBTypography variant="text2">
               {intl.formatMessage(intlMessages.descriptionAttendee)}
-            </Styled.Description>
+            </BBBTypography>
           </Styled.SectionContent>
         </Styled.Section>
       );
@@ -44,36 +50,40 @@ function Panel({
     return (
       <Styled.Section>
         <Styled.SectionContent>
-          <Styled.Description>
+          <BBBTypography variant="text2">
             {intl.formatMessage(intlMessages.description)}
-          </Styled.Description>
+          </BBBTypography>
 
-          <Styled.CheckboxContainer disabled={isActive}>
-            <Styled.Checkbox
-              type="checkbox"
+          <Styled.ToggleContainer>
+            <BBBToggle
+              label={intl.formatMessage(intlMessages.startFromNow)}
+              textPosition="right"
+              onChange={(
+                _: React.ChangeEvent<HTMLInputElement>,
+                checked: boolean,
+              ) => setStartFromNow(checked)}
               checked={startFromNow}
-              onChange={(e) => setStartFromNow(e.target.checked)}
               disabled={isActive}
+              ariaLabel={intl.formatMessage(intlMessages.startFromNow)}
             />
-            {intl.formatMessage(intlMessages.startFromNow)}
-          </Styled.CheckboxContainer>
+          </Styled.ToggleContainer>
 
           <Styled.ButtonsContainer>
-            <Styled.Divider />
-            <Styled.Button
+            <BBBDivider />
+            <BBButton
+              label={intl.formatMessage(intlMessages.startButton)}
               variant="primary"
+              color="default"
               onClick={handleStart}
               disabled={isActive}
-            >
-              {intl.formatMessage(intlMessages.startButton)}
-            </Styled.Button>
-            <Styled.Button
-              variant="danger"
+            />
+            <BBButton
+              label={intl.formatMessage(intlMessages.stopButton)}
+              variant="primary"
+              color="danger"
               onClick={handleStop}
               disabled={!isActive}
-            >
-              {intl.formatMessage(intlMessages.stopButton)}
-            </Styled.Button>
+            />
           </Styled.ButtonsContainer>
         </Styled.SectionContent>
       </Styled.Section>
