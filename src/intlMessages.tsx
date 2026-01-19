@@ -5,10 +5,6 @@ export const intlMessages = defineMessages({
     id: 'app.wordCloud.title',
     description: 'Title for the word cloud',
   },
-  navBarTitle: {
-    id: 'app.wordCloud.navBarTitle',
-    description: 'Title for the word cloud navigation bar section',
-  },
   startTyping: {
     id: 'app.wordCloud.startTyping',
     description: 'Placeholder text where there is no chat messages yet',

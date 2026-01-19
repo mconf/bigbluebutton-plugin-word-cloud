@@ -5,5 +5,7 @@
   "app.wordCloud.description.attendee": "A Nuvem de Palavras é controlada pelo moderador ou apresentador da sessão. A nuvem aparecerá quando o moderador iniciar o recurso.",
   "app.wordCloud.startButton": "Iniciar Nuvem de Palavras",
   "app.wordCloud.stopButton": "Encerrar Nuvem de Palavras",
-  "app.wordCloud.startFromNow": "Contar palavras apenas a partir de agora"
+  "app.wordCloud.startFromNow": "Contar palavras apenas a partir de agora",
+  "app.wordCloud.stopSharing": "Encerrar Nuvem de Palavras",
+  "app.wordCloud.tooltip": "Iniciar Nuvem de Palavras"
 }

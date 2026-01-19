@@ -49,7 +49,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const sidekickRootRef = useRef<ReactDOM.Root | null>(null);
   const mainAreaRootRef = useRef<ReactDOM.Root | null>(null);
   const mainAreaElementRef = useRef<HTMLElement | null>(null);
-  
+
   // State tracking refs
   const activatedAtRef = useRef<number | undefined>(undefined);
   const prevIsActiveRef = useRef<boolean | undefined>(undefined);
@@ -63,7 +63,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   // Get synced startFromNow setting from settings data channel
   const syncedStartFromNow = wordCloudSettings?.data?.[0]?.payloadJson?.startFromNow;
-  
+
   // Set activatedAt when starting with startFromNow option
   if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
     activatedAtRef.current = Date.now();
@@ -75,8 +75,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   // Memoize intl messages
   const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
-  // eslint-disable-next-line max-len
-  const navBarTitleMessage = useMemo(() => intl.formatMessage(intlMessages.navBarTitle), [currentLocale]);
 
   // Stable dispatcher reference
   const dispatcherRef = useRef(wordCloudStartStopDispatcher);
@@ -226,13 +224,13 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     const sidekickArea = new GenericContentSidekickArea({
       contentFunction: sidekickContentFunctionRef.current!,
       name: titleMessage,
-      section: navBarTitleMessage,
+      section: '',
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
     });
 
     const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
-    
+
     // If already active on mount, also add main area
     if (isActiveRef.current) {
       const mainArea = new GenericContentMainArea({
@@ -246,10 +244,10 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     if (isActiveRef.current && generatedIds.length > 1) {
       mainAreaContentId.current = generatedIds[1];
     }
-    
+
     isInitializedRef.current = true;
     prevIsActiveRef.current = isActiveRef.current;
-  }, [titleMessage, navBarTitleMessage, pluginApi]);
+  }, [titleMessage, pluginApi]);
 
   // Effect to handle isActive state transitions
   useEffect(() => {
@@ -266,7 +264,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         id: sidekickContentId.current,
         contentFunction: sidekickContentFunctionRef.current!,
         name: titleMessage,
-        section: navBarTitleMessage,
+        section: '',
         open: false,
         buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
       });
@@ -274,7 +272,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
         contentFunction: mainAreaContentFunctionRef.current!,
       });
-      
+
       const newIds = pluginApi.setGenericContentItems([sidekickArea, mainArea]);
       sidekickContentId.current = newIds[0];
       mainAreaContentId.current = newIds[1];
@@ -286,29 +284,29 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       if (mainAreaElementRef.current) {
         mainAreaElementRef.current.style.opacity = '0';
       }
-      
+
       // Wait for fade out, then remove mainArea
       setTimeout(() => {
         if (!isMountedRef.current) return;
-        
+
         mainAreaRootRef.current = null;
         mainAreaElementRef.current = null;
-        
+
         const sidekickArea = new GenericContentSidekickArea({
           id: sidekickContentId.current,
           contentFunction: sidekickContentFunctionRef.current!,
           name: titleMessage,
-          section: navBarTitleMessage,
+          section: '',
           open: false,
           buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
         });
-        
+
         const newIds = pluginApi.setGenericContentItems([sidekickArea]);
         sidekickContentId.current = newIds[0];
         mainAreaContentId.current = undefined;
       }, FADE_DURATION);
     }
-  }, [isActive, titleMessage, navBarTitleMessage, pluginApi]);
+  }, [isActive, titleMessage, pluginApi]);
 
   return null;
 }
