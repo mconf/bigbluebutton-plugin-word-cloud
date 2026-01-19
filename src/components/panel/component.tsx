@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useState } from 'react';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
@@ -14,10 +13,17 @@ function Panel({
   intl,
   isActive,
   currentStartFromNow,
+  syncedStartFromNow,
   onStartStop,
+  onSettingsChange,
   currentUser,
 }: PanelProps): JSX.Element {
-  const [startFromNow, setStartFromNow] = useState(currentStartFromNow ?? false);
+  // Use synced value when not active, otherwise use the value from when it was started
+  const startFromNow = isActive ? (currentStartFromNow ?? false) : (syncedStartFromNow ?? false);
+
+  const handleToggleChange = (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+    onSettingsChange({ startFromNow: checked });
+  };
 
   const handleStart = () => {
     const payload = {
@@ -57,10 +63,7 @@ function Panel({
             <BBBToggle
               label={intl.formatMessage(intlMessages.startFromNow)}
               textPosition="right"
-              onChange={(
-                _: React.ChangeEvent<HTMLInputElement>,
-                checked: boolean,
-              ) => setStartFromNow(checked)}
+              onChange={handleToggleChange}
               checked={startFromNow}
               disabled={isActive}
               ariaLabel={intl.formatMessage(intlMessages.startFromNow)}

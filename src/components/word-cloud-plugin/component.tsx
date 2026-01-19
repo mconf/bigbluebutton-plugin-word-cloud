@@ -12,7 +12,7 @@ import { intlMessages } from '../../intlMessages';
 import Panel from '../panel/component';
 import { PluginWordCloud } from '../../plugin-word-cloud/component';
 import { WordCloudChannel, WordCloudSubChannels } from '../enums';
-import { WordCloudStartStopType } from '../panel/types';
+import { WordCloudStartStopType, WordCloudSettingsType } from '../panel/types';
 
 const NAVIGATION_SIDEBAR_BUTTON_ICON = 'cloud';
 const FADE_DURATION = 200; // ms
@@ -25,6 +25,15 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     WordCloudChannel.WORDCLOUD,
     DataChannelTypes.LATEST_ITEM,
     WordCloudSubChannels.START_STOP,
+  );
+
+  const {
+    data: wordCloudSettings,
+    pushEntry: wordCloudSettingsDispatcher,
+  } = pluginApi.useDataChannel<WordCloudSettingsType>(
+    WordCloudChannel.WORDCLOUD,
+    DataChannelTypes.LATEST_ITEM,
+    WordCloudSubChannels.SETTINGS,
   );
 
   const { data: currentUser } = pluginApi.useCurrentUser();
@@ -51,6 +60,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
   const isActive = payloadJson?.message === 'start';
   const currentStartFromNow = payloadJson?.startFromNow;
+
+  // Get synced startFromNow setting from settings data channel
+  const syncedStartFromNow = wordCloudSettings?.data?.[0]?.payloadJson?.startFromNow;
   
   // Set activatedAt when starting with startFromNow option
   if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
@@ -74,9 +86,18 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     dispatcherRef.current(data);
   }, []);
 
+  // Stable settings dispatcher reference
+  const settingsDispatcherRef = useRef(wordCloudSettingsDispatcher);
+  settingsDispatcherRef.current = wordCloudSettingsDispatcher;
+
+  const stableSettingsDispatcher = useCallback((data: WordCloudSettingsType) => {
+    settingsDispatcherRef.current(data);
+  }, []);
+
   // Store current values in refs for use in content functions
   const isActiveRef = useRef(isActive);
   const currentStartFromNowRef = useRef(currentStartFromNow);
+  const syncedStartFromNowRef = useRef(syncedStartFromNow);
   const activatedAtRefValue = useRef(activatedAt);
   const intlRef = useRef(intl);
   const pluginApiRef = useRef(pluginApi);
@@ -84,6 +105,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   isActiveRef.current = isActive;
   currentStartFromNowRef.current = currentStartFromNow;
+  syncedStartFromNowRef.current = syncedStartFromNow;
   activatedAtRefValue.current = activatedAt;
   intlRef.current = intl;
   pluginApiRef.current = pluginApi;
@@ -109,7 +131,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
             intl={intlRef.current}
             isActive={isActiveRef.current}
             currentStartFromNow={currentStartFromNowRef.current}
+            syncedStartFromNow={syncedStartFromNowRef.current}
             onStartStop={stableDispatcher}
+            onSettingsChange={stableSettingsDispatcher}
             currentUser={currentUserRef.current}
           />
         </React.StrictMode>,
@@ -164,13 +188,23 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
             intl={intl}
             isActive={isActive}
             currentStartFromNow={currentStartFromNow}
+            syncedStartFromNow={syncedStartFromNow}
             onStartStop={stableDispatcher}
+            onSettingsChange={stableSettingsDispatcher}
             currentUser={currentUser}
           />
         </React.StrictMode>,
       );
     }
-  }, [isActive, currentStartFromNow, stableDispatcher, intl, currentUser]);
+  }, [
+    isActive,
+    currentStartFromNow,
+    syncedStartFromNow,
+    stableDispatcher,
+    stableSettingsDispatcher,
+    intl,
+    currentUser,
+  ]);
 
   // Effect to update main area content
   useEffect(() => {
