@@ -11,13 +11,12 @@ import {
 } from 'bbb-ui-components-react';
 
 function Panel({
-  pluginApi,
   intl,
   isActive,
   currentStartFromNow,
   onStartStop,
+  currentUser,
 }: PanelProps): JSX.Element {
-  const { data: currentUser } = pluginApi.useCurrentUser();
   const [startFromNow, setStartFromNow] = useState(currentStartFromNow ?? false);
 
   const handleStart = () => {

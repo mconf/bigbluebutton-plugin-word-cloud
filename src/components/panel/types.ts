@@ -1,4 +1,4 @@
-import { PluginApi } from 'bigbluebutton-html-plugin-sdk';
+import { CurrentUserData } from 'bigbluebutton-html-plugin-sdk';
 import { IntlShape } from 'react-intl';
 
 export interface WordCloudStartStopType {
@@ -7,9 +7,9 @@ export interface WordCloudStartStopType {
 }
 
 export interface PanelProps {
-  pluginApi: PluginApi;
   intl: IntlShape;
   isActive: boolean;
   currentStartFromNow?: boolean;
   onStartStop: (data: WordCloudStartStopType) => void;
+  currentUser?: CurrentUserData;
 }

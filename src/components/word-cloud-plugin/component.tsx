@@ -27,6 +27,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     WordCloudSubChannels.START_STOP,
   );
 
+  const { data: currentUser } = pluginApi.useCurrentUser();
+
   const currentLocale = pluginApi.useUiData(IntlLocaleUiDataNames.CURRENT_LOCALE, {
     locale: 'en',
     fallbackLocale: 'en',
@@ -38,28 +40,31 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   const sidekickRootRef = useRef<ReactDOM.Root | null>(null);
   const mainAreaRootRef = useRef<ReactDOM.Root | null>(null);
   const mainAreaElementRef = useRef<HTMLElement | null>(null);
-
+  
   // State tracking refs
+  const activatedAtRef = useRef<number | undefined>(undefined);
   const prevIsActiveRef = useRef<boolean | undefined>(undefined);
   const isInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
 
   // Derive isActive from the data channel
-  const dataChannelEntry = wordCloudStartStop?.data?.[0];
-  const payloadJson = dataChannelEntry?.payloadJson;
+  const payloadJson = wordCloudStartStop?.data?.[0]?.payloadJson;
   const isActive = payloadJson?.message === 'start';
   const currentStartFromNow = payloadJson?.startFromNow;
-
-  // Use the createdAt timestamp from the data channel entry when startFromNow is enabled
-  // This ensures all users see the same timestamp regardless of when they joined
-  let activatedAt: number | undefined;
-  if (isActive && currentStartFromNow && dataChannelEntry?.createdAt) {
-    // Convert ISO string timestamp to milliseconds
-    activatedAt = new Date(dataChannelEntry.createdAt).getTime();
+  
+  // Set activatedAt when starting with startFromNow option
+  if (isActive && payloadJson?.startFromNow && !activatedAtRef.current) {
+    activatedAtRef.current = Date.now();
+  } else if (!isActive) {
+    activatedAtRef.current = undefined;
   }
+
+  const activatedAt = activatedAtRef.current;
 
   // Memoize intl messages
   const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
+  // eslint-disable-next-line max-len
+  const navBarTitleMessage = useMemo(() => intl.formatMessage(intlMessages.navBarTitle), [currentLocale]);
 
   // Stable dispatcher reference
   const dispatcherRef = useRef(wordCloudStartStopDispatcher);
@@ -72,17 +77,17 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   // Store current values in refs for use in content functions
   const isActiveRef = useRef(isActive);
   const currentStartFromNowRef = useRef(currentStartFromNow);
-  const activatedAtRef = useRef(activatedAt);
+  const activatedAtRefValue = useRef(activatedAt);
   const intlRef = useRef(intl);
   const pluginApiRef = useRef(pluginApi);
-  const titleMessageRef = useRef(titleMessage);
+  const currentUserRef = useRef(currentUser);
 
   isActiveRef.current = isActive;
   currentStartFromNowRef.current = currentStartFromNow;
-  activatedAtRef.current = activatedAt;
+  activatedAtRefValue.current = activatedAt;
   intlRef.current = intl;
   pluginApiRef.current = pluginApi;
-  titleMessageRef.current = titleMessage;
+  currentUserRef.current = currentUser;
 
   // Cleanup on unmount
   useEffect(() => {
@@ -101,11 +106,11 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       root.render(
         <React.StrictMode>
           <Panel
-            pluginApi={pluginApiRef.current}
             intl={intlRef.current}
             isActive={isActiveRef.current}
             currentStartFromNow={currentStartFromNowRef.current}
             onStartStop={stableDispatcher}
+            currentUser={currentUserRef.current}
           />
         </React.StrictMode>,
       );
@@ -120,7 +125,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       mainAreaElementRef.current = element;
 
       // Start completely hidden for fade-in effect
+      // eslint-disable-next-line no-param-reassign
       element.style.opacity = '0';
+      // eslint-disable-next-line no-param-reassign
       element.style.transition = `opacity ${FADE_DURATION}ms ease-in-out`;
 
       const root = ReactDOM.createRoot(element);
@@ -129,9 +136,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       root.render(
         <React.StrictMode>
           <PluginWordCloud
-            intl={intlRef.current}
             pluginApi={pluginApiRef.current}
-            activatedAt={activatedAtRef.current}
+            intl={intlRef.current}
+            activatedAt={activatedAtRefValue.current}
           />
         </React.StrictMode>,
       );
@@ -139,6 +146,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       // Fade in after content is rendered and a small delay
       setTimeout(() => {
         if (isMountedRef.current && element) {
+          // eslint-disable-next-line no-param-reassign
           element.style.opacity = '1';
         }
       }, 50);
@@ -154,15 +162,15 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         <React.StrictMode>
           <Panel
             intl={intl}
-            pluginApi={pluginApi}
             isActive={isActive}
             currentStartFromNow={currentStartFromNow}
             onStartStop={stableDispatcher}
+            currentUser={currentUser}
           />
         </React.StrictMode>,
       );
     }
-  }, [isActive, currentStartFromNow, stableDispatcher, intl, pluginApi]);
+  }, [isActive, currentStartFromNow, stableDispatcher, intl, currentUser]);
 
   // Effect to update main area content
   useEffect(() => {
@@ -179,45 +187,18 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     }
   }, [activatedAt, isActive, intl, pluginApi]);
 
-  // Effect to update sidekick area name when locale changes
-  useEffect(() => {
-    if (!isInitializedRef.current || !sidekickContentId.current) return;
-
-    const sidekickArea = new GenericContentSidekickArea({
-      id: sidekickContentId.current,
-      contentFunction: sidekickContentFunctionRef.current!,
-      name: titleMessageRef.current,
-      open: false,
-      buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
-      section: 'wordcloud',
-    });
-
-    const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
-
-    // If active, also include main area
-    if (isActive && mainAreaContentId.current) {
-      const mainArea = new GenericContentMainArea({
-        id: mainAreaContentId.current,
-        contentFunction: mainAreaContentFunctionRef.current!,
-      });
-      items.push(mainArea);
-    }
-
-    pluginApi.setGenericContentItems(items);
-  }, [titleMessage, pluginApi, isActive]);
-
   // Initial setup - register sidekick only, mainArea will be added on activation
   useEffect(() => {
     const sidekickArea = new GenericContentSidekickArea({
       contentFunction: sidekickContentFunctionRef.current!,
-      name: titleMessageRef.current,
+      name: titleMessage,
+      section: navBarTitleMessage,
       open: false,
       buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
-      section: 'wordcloud',
     });
 
     const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
-
+    
     // If already active on mount, also add main area
     if (isActiveRef.current) {
       const mainArea = new GenericContentMainArea({
@@ -231,10 +212,10 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     if (isActiveRef.current && generatedIds.length > 1) {
       mainAreaContentId.current = generatedIds[1];
     }
-
+    
     isInitializedRef.current = true;
     prevIsActiveRef.current = isActiveRef.current;
-  }, [pluginApi]); // Remove titleMessage dependency to run only once
+  }, [titleMessage, navBarTitleMessage, pluginApi]);
 
   // Effect to handle isActive state transitions
   useEffect(() => {
@@ -250,16 +231,16 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       const sidekickArea = new GenericContentSidekickArea({
         id: sidekickContentId.current,
         contentFunction: sidekickContentFunctionRef.current!,
-        name: titleMessageRef.current,
+        name: titleMessage,
+        section: navBarTitleMessage,
         open: false,
         buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
-        section: 'wordcloud',
       });
       const mainArea = new GenericContentMainArea({
         ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
         contentFunction: mainAreaContentFunctionRef.current!,
       });
-
+      
       const newIds = pluginApi.setGenericContentItems([sidekickArea, mainArea]);
       sidekickContentId.current = newIds[0];
       mainAreaContentId.current = newIds[1];
@@ -271,29 +252,29 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       if (mainAreaElementRef.current) {
         mainAreaElementRef.current.style.opacity = '0';
       }
-
+      
       // Wait for fade out, then remove mainArea
       setTimeout(() => {
         if (!isMountedRef.current) return;
-
+        
         mainAreaRootRef.current = null;
         mainAreaElementRef.current = null;
-
+        
         const sidekickArea = new GenericContentSidekickArea({
           id: sidekickContentId.current,
           contentFunction: sidekickContentFunctionRef.current!,
-          name: titleMessageRef.current,
+          name: titleMessage,
+          section: navBarTitleMessage,
           open: false,
           buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
-          section: 'wordcloud',
         });
-
+        
         const newIds = pluginApi.setGenericContentItems([sidekickArea]);
         sidekickContentId.current = newIds[0];
         mainAreaContentId.current = undefined;
       }, FADE_DURATION);
     }
-  }, [isActive, pluginApi]); // Remove titleMessage to avoid conflicts with locale update effect
+  }, [isActive, titleMessage, navBarTitleMessage, pluginApi]);
 
   return null;
 }
