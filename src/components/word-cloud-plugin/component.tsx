@@ -76,23 +76,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   // Memoize intl messages
   const titleMessage = useMemo(() => intl.formatMessage(intlMessages.title), [currentLocale]);
 
-  // Stable dispatcher reference
-  const dispatcherRef = useRef(wordCloudStartStopDispatcher);
-  dispatcherRef.current = wordCloudStartStopDispatcher;
-
-  const stableDispatcher = useCallback((data: WordCloudStartStopType) => {
-    dispatcherRef.current(data);
-  }, []);
-
-  // Stable settings dispatcher reference
-  const settingsDispatcherRef = useRef(wordCloudSettingsDispatcher);
-  settingsDispatcherRef.current = wordCloudSettingsDispatcher;
-
-  const stableSettingsDispatcher = useCallback((data: WordCloudSettingsType) => {
-    settingsDispatcherRef.current(data);
-  }, []);
-
-  // Store current values in refs for use in content functions
+  // Store current values in refs for use in content functions (defined early for use in callbacks)
   const isActiveRef = useRef(isActive);
   const currentStartFromNowRef = useRef(currentStartFromNow);
   const syncedStartFromNowRef = useRef(syncedStartFromNow);
@@ -109,6 +93,22 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   pluginApiRef.current = pluginApi;
   currentUserRef.current = currentUser;
 
+  // Stable dispatcher reference
+  const dispatcherRef = useRef(wordCloudStartStopDispatcher);
+  dispatcherRef.current = wordCloudStartStopDispatcher;
+
+  const stableDispatcher = useCallback((data: WordCloudStartStopType) => {
+    dispatcherRef.current(data);
+  }, []);
+
+  // Stable settings dispatcher reference
+  const settingsDispatcherRef = useRef(wordCloudSettingsDispatcher);
+  settingsDispatcherRef.current = wordCloudSettingsDispatcher;
+
+  const stableSettingsDispatcher = useCallback((data: WordCloudSettingsType) => {
+    settingsDispatcherRef.current(data);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     isMountedRef.current = true;
@@ -116,6 +116,20 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       isMountedRef.current = false;
     };
   }, []);
+
+  // Reset root refs when presenter/role changes to handle SDK container recreation
+  const prevCurrentUserRef = useRef(currentUser);
+  useEffect(() => {
+    const prev = prevCurrentUserRef.current;
+    if (prev?.presenter !== currentUser?.presenter || prev?.role !== currentUser?.role) {
+      // When presenter status changes, the SDK may recreate containers
+      // Reset root refs to force recreation on next contentFunction call
+      sidekickRootRef.current = null;
+      mainAreaRootRef.current = null;
+      mainAreaElementRef.current = null;
+    }
+    prevCurrentUserRef.current = currentUser;
+  }, [currentUser]);
 
   // STABLE content function for sidekick - created ONCE and stored in ref
   const sidekickContentFunctionRef = useRef<((element: HTMLElement) => ReactDOM.Root) | null>(null);
@@ -179,6 +193,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   // Effect to update sidekick panel content
   useEffect(() => {
+    if (!isMountedRef.current) return;
     if (sidekickRootRef.current) {
       sidekickRootRef.current.render(
         <React.StrictMode>
@@ -206,6 +221,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
   // Effect to update main area content
   useEffect(() => {
+    if (!isMountedRef.current) return;
     if (mainAreaRootRef.current && isActive) {
       mainAreaRootRef.current.render(
         <React.StrictMode>
@@ -259,7 +275,6 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
 
     // Transition: inactive -> active
     if (!wasActive && isActive) {
-      // Fade out presentation area first (via opacity), then add our content
       const sidekickArea = new GenericContentSidekickArea({
         id: sidekickContentId.current,
         contentFunction: sidekickContentFunctionRef.current!,
