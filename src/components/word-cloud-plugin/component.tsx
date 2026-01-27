@@ -217,6 +217,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     stableSettingsDispatcher,
     intl,
     currentUser,
+    currentUser?.role,
+    currentUser?.presenter,
   ]);
 
   // Effect to update main area content
