@@ -2,6 +2,7 @@ import * as React from 'react';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
+import nuvemSvg from '../../../assets/nuvemsvg.svg';
 import {
   BBButton,
   BBBToggle,
@@ -44,6 +45,9 @@ function Panel({
       return (
         <Styled.Section>
           <Styled.SectionContent>
+            <Styled.AnimationContainer>
+              <img src={nuvemSvg} alt="Word Cloud Animation" />
+            </Styled.AnimationContainer>
             <BBBTypography variant="default">
               {intl.formatMessage(intlMessages.descriptionAttendee)}
             </BBBTypography>
@@ -55,6 +59,9 @@ function Panel({
     return (
       <Styled.Section>
         <Styled.SectionContent>
+          <Styled.AnimationContainer>
+            <img src={nuvemSvg} alt="Word Cloud Animation" />
+          </Styled.AnimationContainer>
           <BBBTypography variant="default">
             {intl.formatMessage(intlMessages.description)}
           </BBBTypography>

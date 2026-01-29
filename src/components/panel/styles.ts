@@ -73,6 +73,20 @@ const ToggleContainer = styled.div`
   margin-bottom: 1rem;
 `;
 
+const AnimationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    max-height: 150px;
+  }
+`;
+
 export default {
   Container,
   Section,
@@ -82,4 +96,5 @@ export default {
   StatusDot,
   StatusText,
   ToggleContainer,
+  AnimationContainer,
 };
