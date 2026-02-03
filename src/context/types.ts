@@ -5,8 +5,7 @@ export interface Settings {
 }
 
 export interface ClientSettings extends MeetingClientSettings {
-  public: {
-    app: { bbbWebBase: string; };
+  public: MeetingClientSettings['public'] & {
     plugins?: [{ name?: string, settings?: Settings }];
   }
 }
