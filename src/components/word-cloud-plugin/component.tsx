@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import {
   GenericContentSidekickArea,
@@ -13,6 +13,7 @@ import Panel from '../panel/component';
 import { PluginWordCloud } from '../../plugin-word-cloud/component';
 import { WordCloudChannel, WordCloudSubChannels } from '../enums';
 import { WordCloudStartStopType, WordCloudSettingsType } from '../panel/types';
+import { SettingsProvider } from '../../context/settings/context';
 
 const NAVIGATION_SIDEBAR_BUTTON_ICON = 'cloud';
 const FADE_DURATION = 200; // ms
@@ -117,19 +118,47 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     };
   }, []);
 
-  // Reset root refs when presenter/role changes to handle SDK container recreation
+  // Re-render sidekick when presenter/role changes to update panel content
   const prevCurrentUserRef = useRef(currentUser);
+  const [roleChangeCounter, setRoleChangeCounter] = useState(0);
+
   useEffect(() => {
     const prev = prevCurrentUserRef.current;
+
     if (prev?.presenter !== currentUser?.presenter || prev?.role !== currentUser?.role) {
-      // When presenter status changes, the SDK may recreate containers
-      // Reset root refs to force recreation on next contentFunction call
-      sidekickRootRef.current = null;
-      mainAreaRootRef.current = null;
-      mainAreaElementRef.current = null;
+      // Try to re-render existing root first
+      if (sidekickRootRef.current) {
+        try {
+          sidekickRootRef.current.render(
+            <React.StrictMode>
+              <SettingsProvider>
+                <Panel
+                  intl={intlRef.current}
+                  isActive={isActiveRef.current}
+                  currentStartFromNow={currentStartFromNowRef.current}
+                  syncedStartFromNow={syncedStartFromNowRef.current}
+                  onStartStop={stableDispatcher}
+                  onSettingsChange={stableSettingsDispatcher}
+                  currentUser={currentUser}
+                />
+              </SettingsProvider>
+            </React.StrictMode>,
+          );
+        } catch (error) {
+          // Reset refs and trigger re-registration
+          sidekickRootRef.current = null;
+          mainAreaRootRef.current = null;
+          mainAreaElementRef.current = null;
+          setRoleChangeCounter((c) => c + 1);
+        }
+      } else {
+        // No existing root, need to re-register
+        setRoleChangeCounter((c) => c + 1);
+      }
     }
+
     prevCurrentUserRef.current = currentUser;
-  }, [currentUser]);
+  }, [currentUser, stableDispatcher, stableSettingsDispatcher]);
 
   // STABLE content function for sidekick - created ONCE and stored in ref
   const sidekickContentFunctionRef = useRef<((element: HTMLElement) => ReactDOM.Root) | null>(null);
@@ -139,15 +168,17 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       sidekickRootRef.current = root;
       root.render(
         <React.StrictMode>
-          <Panel
-            intl={intlRef.current}
-            isActive={isActiveRef.current}
-            currentStartFromNow={currentStartFromNowRef.current}
-            syncedStartFromNow={syncedStartFromNowRef.current}
-            onStartStop={stableDispatcher}
-            onSettingsChange={stableSettingsDispatcher}
-            currentUser={currentUserRef.current}
-          />
+          <SettingsProvider>
+            <Panel
+              intl={intlRef.current}
+              isActive={isActiveRef.current}
+              currentStartFromNow={currentStartFromNowRef.current}
+              syncedStartFromNow={syncedStartFromNowRef.current}
+              onStartStop={stableDispatcher}
+              onSettingsChange={stableSettingsDispatcher}
+              currentUser={currentUserRef.current}
+            />
+          </SettingsProvider>
         </React.StrictMode>,
       );
       return root;
@@ -195,19 +226,25 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   useEffect(() => {
     if (!isMountedRef.current) return;
     if (sidekickRootRef.current) {
-      sidekickRootRef.current.render(
-        <React.StrictMode>
-          <Panel
-            intl={intl}
-            isActive={isActive}
-            currentStartFromNow={currentStartFromNow}
-            syncedStartFromNow={syncedStartFromNow}
-            onStartStop={stableDispatcher}
-            onSettingsChange={stableSettingsDispatcher}
-            currentUser={currentUser}
-          />
-        </React.StrictMode>,
-      );
+      try {
+        sidekickRootRef.current.render(
+          <React.StrictMode>
+            <SettingsProvider>
+              <Panel
+                intl={intl}
+                isActive={isActive}
+                currentStartFromNow={currentStartFromNow}
+                syncedStartFromNow={syncedStartFromNow}
+                onStartStop={stableDispatcher}
+                onSettingsChange={stableSettingsDispatcher}
+                currentUser={currentUser}
+              />
+            </SettingsProvider>
+          </React.StrictMode>,
+        );
+      } catch (error) {
+        sidekickRootRef.current = null;
+      }
     }
   }, [
     isActive,
@@ -225,15 +262,19 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
   useEffect(() => {
     if (!isMountedRef.current) return;
     if (mainAreaRootRef.current && isActive) {
-      mainAreaRootRef.current.render(
-        <React.StrictMode>
-          <PluginWordCloud
-            pluginApi={pluginApi}
-            intl={intl}
-            activatedAt={activatedAt}
-          />
-        </React.StrictMode>,
-      );
+      try {
+        mainAreaRootRef.current.render(
+          <React.StrictMode>
+            <PluginWordCloud
+              pluginApi={pluginApi}
+              intl={intl}
+              activatedAt={activatedAt}
+            />
+          </React.StrictMode>,
+        );
+      } catch (error) {
+        mainAreaRootRef.current = null;
+      }
     }
   }, [activatedAt, isActive, intl, pluginApi]);
 
@@ -266,6 +307,38 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     isInitializedRef.current = true;
     prevIsActiveRef.current = isActiveRef.current;
   }, [titleMessage, pluginApi]);
+
+  // Effect to re-register sidekick when role/presenter changes
+  useEffect(() => {
+    // Skip on initial mount (roleChangeCounter starts at 0)
+    if (!isInitializedRef.current || roleChangeCounter === 0) return;
+
+    const sidekickArea = new GenericContentSidekickArea({
+      id: sidekickContentId.current,
+      contentFunction: sidekickContentFunctionRef.current!,
+      name: titleMessage,
+      section: '',
+      open: false,
+      buttonIcon: NAVIGATION_SIDEBAR_BUTTON_ICON,
+    });
+
+    const items: (GenericContentSidekickArea | GenericContentMainArea)[] = [sidekickArea];
+
+    // If active, also include main area
+    if (isActiveRef.current) {
+      const mainArea = new GenericContentMainArea({
+        ...(mainAreaContentId.current && { id: mainAreaContentId.current }),
+        contentFunction: mainAreaContentFunctionRef.current!,
+      });
+      items.push(mainArea);
+    }
+
+    const generatedIds = pluginApi.setGenericContentItems(items);
+    sidekickContentId.current = generatedIds[0];
+    if (isActiveRef.current && generatedIds.length > 1) {
+      mainAreaContentId.current = generatedIds[1];
+    }
+  }, [roleChangeCounter, titleMessage, pluginApi]);
 
   // Effect to handle isActive state transitions
   useEffect(() => {

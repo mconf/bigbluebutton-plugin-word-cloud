@@ -1,6 +1,7 @@
 import { createIntl } from 'react-intl';
 import { PluginApi, IntlLocaleUiDataNames } from 'bigbluebutton-html-plugin-sdk';
 import * as React from 'react';
+import { SettingsProvider } from '../context/settings/context';
 
 const localesContext = require.context('@locales', true, /\.json$/);
 
@@ -23,5 +24,9 @@ export const useInjectIntl = <P extends object>(WrappedComponent: React.Componen
     fallbackOnEmptyString: true,
   });
 
-  return <WrappedComponent {...props as P} intl={intl} pluginApi={pluginApi} />;
+  return (
+    <SettingsProvider>
+      <WrappedComponent {...props as P} intl={intl} pluginApi={pluginApi} />
+    </SettingsProvider>
+  );
 };

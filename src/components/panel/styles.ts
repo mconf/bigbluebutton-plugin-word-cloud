@@ -37,6 +37,16 @@ const SectionContent = styled.div`
   flex: 1;
 `;
 
+const AttendeeContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 0;
+  margin-right: auto;
+  margin-left: auto;
+  width: 100%;
+`;
+
 const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -91,6 +101,7 @@ export default {
   Container,
   Section,
   SectionContent,
+  AttendeeContent,
   ButtonsContainer,
   StatusIndicator,
   StatusDot,

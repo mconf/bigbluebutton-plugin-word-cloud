@@ -1,14 +1,14 @@
 import * as React from 'react';
-import { PanelProps } from './types';
-import Styled from './styles';
-import { intlMessages } from '../../intlMessages';
-import nuvemSvg from '../../../assets/nuvemsvg.svg';
 import {
   BBButton,
   BBBToggle,
   BBBTypography,
   BBBDivider,
 } from 'bbb-ui-components-react';
+import { PanelProps } from './types';
+import Styled from './styles';
+import { intlMessages } from '../../intlMessages';
+import { usePanelImageUrl } from '../../context/settings/context';
 
 function Panel({
   intl,
@@ -19,6 +19,8 @@ function Panel({
   onSettingsChange,
   currentUser,
 }: PanelProps): JSX.Element {
+  const panelImageUrl = usePanelImageUrl();
+
   // Use synced value when not active, otherwise use the value from when it was started
   const startFromNow = isActive ? (currentStartFromNow ?? false) : (syncedStartFromNow ?? false);
 
@@ -44,14 +46,16 @@ function Panel({
     if (!isModeratorOrPresenter) {
       return (
         <Styled.Section>
-          <Styled.SectionContent>
-            <Styled.AnimationContainer>
-              <img src={nuvemSvg} alt="Word Cloud Animation" />
-            </Styled.AnimationContainer>
+          <Styled.AttendeeContent>
+            {panelImageUrl && (
+              <Styled.AnimationContainer>
+                <img src={panelImageUrl} alt="Word Cloud Animation" />
+              </Styled.AnimationContainer>
+            )}
             <BBBTypography variant="default">
               {intl.formatMessage(intlMessages.descriptionAttendee)}
             </BBBTypography>
-          </Styled.SectionContent>
+          </Styled.AttendeeContent>
         </Styled.Section>
       );
     }
@@ -59,9 +63,11 @@ function Panel({
     return (
       <Styled.Section>
         <Styled.SectionContent>
-          <Styled.AnimationContainer>
-            <img src={nuvemSvg} alt="Word Cloud Animation" />
-          </Styled.AnimationContainer>
+          {panelImageUrl && (
+            <Styled.AnimationContainer>
+              <img src={panelImageUrl} alt="Word Cloud Animation" />
+            </Styled.AnimationContainer>
+          )}
           <BBBTypography variant="default">
             {intl.formatMessage(intlMessages.description)}
           </BBBTypography>
