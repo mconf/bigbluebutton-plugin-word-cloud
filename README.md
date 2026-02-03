@@ -35,6 +35,21 @@ pluginManifests=[{"url":"<your-domain>/path/to/manifest.json"}]
 
 Or additionally, you can add this same configuration in the `.properties` file from `bbb-web` in `/usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties`
 
+## Required Client Settings
+
+This plugin requires that you provide specific settings in your client configuration to indicate the URL for the illustration image used by the plugin. Without these settings, the plugin will not display the illustration as intended.
+
+Example configuration:
+
+```yaml
+plugins:
+    - name: WordCloudPlugin
+      url: <<PLUGIN_URL>>/manifest.json
+      settings:
+          panelImageUrl: 'https://your-domain.com/path/to/wordcloud-illustration.svg'
+```
+
+Make sure to replace the URL with the actual location of your asset.
 
 ## Development mode
 
