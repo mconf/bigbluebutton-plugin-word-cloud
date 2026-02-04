@@ -49,6 +49,14 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/i,
+        type: 'asset/inline',
+      },
+      {
+        test: /\.svg$/i,
+        type: 'asset/inline',
+      },
     ],
   },
   resolve: {

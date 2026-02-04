@@ -11,16 +11,7 @@
       ],
       "replaceOrDeletePermission": [
         "moderator",
-        "sender"
-      ]
-    },
-    {
-      "name": "LocationShareEnableChannel",
-      "pushPermission": [
-        "moderator"
-      ],
-      "replaceOrDeletePermission": [
-        "moderator"
+        "presenter"
       ]
     }
   ]
