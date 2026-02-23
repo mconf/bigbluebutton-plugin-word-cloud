@@ -23,8 +23,18 @@ interface WordData extends cloud.Word {
 // Using Unicode property escapes: \p{Emoji_Presentation}, \p{Emoji} with VS16, Regional Indicators for flags
 const emojiIsolatingRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}\p{Regional_Indicator})+|\p{Emoji})/gu;
 
-// Regex to match URLs (http, https, ftp, www, or domain-like patterns)
-const urlRegex = /^(https?:\/\/|ftp:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/i;
+// More restrictive URL regex - matches common URL patterns
+const urlRegex = /^(https?:\/\/|ftp:\/\/|www\.)/i;
+
+// Regex to validate words - must contain at least one letter (any language) or be an emoji
+// This filters out pure numbers, symbols, and other non-word content
+const validWordRegex = /^[\p{L}\p{M}]+$/u;
+
+// Regex to check if a string is an emoji (simple check)
+const isEmojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}\p{Regional_Indicator})+)$/u;
+
+// Minimum word length to include (helps filter out noise)
+const MIN_WORD_LENGTH = 2;
 
 const extractWords = (text: string): string[] => {
   if (!text) return [];
@@ -47,10 +57,19 @@ const extractWords = (text: string): string[] => {
       return true;
     })
     .map((token) => {
-      // Remove common punctuation from each word
-      return token.replace(/[.,!?;:]/g, '');
+      // Remove common punctuation from each word (including parentheses, brackets, etc.)
+      return token.replace(/[.,!?;:()[\]{}'"<>*#@&^%$~`\\|/+=_-]/g, '');
     })
-    .filter((word) => word.length > 0); // Filter out empty strings after punctuation removal
+    .filter((word) => {
+      // Filter out empty strings after punctuation removal
+      if (word.length === 0) return false;
+      // Allow emojis
+      if (isEmojiRegex.test(word)) return true;
+      // Require minimum length for words
+      if (word.length < MIN_WORD_LENGTH) return false;
+      // Only allow words that contain at least one letter (filters out pure numbers/symbols)
+      return validWordRegex.test(word);
+    });
 
   return words;
 };
@@ -61,8 +80,8 @@ React.ReactElement<PluginWordCloudProps> {
   const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
   // State to store word counts PER CATEGORY (minute) (for layout grouping)
   const [categorizedWordCounts, setCategorizedWordCounts] = useState<Record<string, Record<string, number>>>({});
-  // State to keep track of processed message IDs to avoid duplicates
-  const [processedMessageIds, setProcessedMessageIds] = useState<Set<string>>(new Set());
+  // State to keep track of processed messages with their content and category (to handle edits)
+  const [processedMessages, setProcessedMessages] = useState<Record<string, { content: string; category: string; editedAt: string | null }>>({});
   // State to track the current category index, incremented by "/cloud"
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState<number>(0);
   // Ref for the container div where D3 will render the SVG
@@ -80,7 +99,7 @@ React.ReactElement<PluginWordCloudProps> {
     if (activatedAt) {
       setWordCounts({});
       setCategorizedWordCounts({});
-      setProcessedMessageIds(new Set());
+      setProcessedMessages({});
       setCurrentCategoryIndex(0);
     }
   }, [activatedAt]);
@@ -90,12 +109,83 @@ React.ReactElement<PluginWordCloudProps> {
     if (subscriptionResponse.data?.chat_message_public
         && Array.isArray(subscriptionResponse.data.chat_message_public)) {
       const newMessages = subscriptionResponse.data.chat_message_public;
-      let updated = false; // Flag to track if wordCounts was updated
 
       newMessages.forEach((message) => {
-        // Check if the message object and ID are valid and if it hasn't been processed yet
-        if (!message || !message.messageId || !message.message || processedMessageIds.has(message.messageId)) {
+        // Check if the message object and ID are valid
+        if (!message || !message.messageId) {
           return; // Skip this message
+        }
+
+        // Destructure needed fields
+        const { messageId, message: messageText, editedAt, deletedAt, messageType } = message;
+
+        // Check if this message was already processed
+        const existingMessage = processedMessages[messageId];
+
+        // --- Handle deleted message: remove its words ---
+        if (deletedAt && existingMessage) {
+          const oldWords = extractWords(existingMessage.content);
+          const oldCategory = existingMessage.category;
+
+          if (oldWords.length > 0) {
+            // Decrement GLOBAL word counts for deleted message words
+            setWordCounts((prevGlobalCounts) => {
+              const newGlobalCounts = { ...prevGlobalCounts };
+              oldWords.forEach((word) => {
+                if (newGlobalCounts[word]) {
+                  newGlobalCounts[word] -= 1;
+                  if (newGlobalCounts[word] <= 0) {
+                    delete newGlobalCounts[word];
+                  }
+                }
+              });
+              return newGlobalCounts;
+            });
+
+            // Decrement CATEGORIZED word counts for deleted message words
+            setCategorizedWordCounts((prevCategorizedCounts) => {
+              const newCategorizedCounts = { ...prevCategorizedCounts };
+              if (newCategorizedCounts[oldCategory]) {
+                oldWords.forEach((word) => {
+                  if (newCategorizedCounts[oldCategory][word]) {
+                    newCategorizedCounts[oldCategory][word] -= 1;
+                    if (newCategorizedCounts[oldCategory][word] <= 0) {
+                      delete newCategorizedCounts[oldCategory][word];
+                    }
+                  }
+                });
+                // Remove category if empty
+                if (Object.keys(newCategorizedCounts[oldCategory]).length === 0) {
+                  delete newCategorizedCounts[oldCategory];
+                }
+              }
+              return newCategorizedCounts;
+            });
+          }
+
+          // Remove from processed messages
+          setProcessedMessages((prev) => {
+            const newProcessed = { ...prev };
+            delete newProcessed[messageId];
+            return newProcessed;
+          });
+          return; // Skip further processing for deleted messages
+        }
+
+        // Skip deleted messages that we haven't processed yet
+        if (deletedAt) {
+          return;
+        }
+
+        // Skip messages without text content
+        if (!messageText) {
+          return;
+        }
+
+        // Skip plugin messages (e.g., Q&A plugin, poll messages, etc.)
+        // Only process 'default' message type (regular user chat messages)
+        if (!messageType || messageType !== 'default') {
+          return; // Skip non-default message types (plugin, poll, presentation, etc.)
         }
 
         // Skip messages created before activation if activatedAt is set
@@ -106,23 +196,79 @@ React.ReactElement<PluginWordCloudProps> {
           }
         }
 
-        // Destructure needed fields
-        const { messageId, message: messageText } = message;
+        // Check if this is an edited message that we've already processed
+        const isEdited = existingMessage && editedAt && existingMessage.editedAt !== editedAt;
+        const isNewMessage = !existingMessage;
 
-        // Mark message as processed immediately
-        setProcessedMessageIds((prevIds) => new Set(prevIds).add(messageId));
-        updated = true; // Mark that we are processing new data
+        // Skip if already processed and not edited
+        if (existingMessage && !isEdited) {
+          return;
+        }
 
         // --- Check for /cloud command ---
         if (messageText.trim() === '/cloud') {
-          setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
-          // Do not process this message for words
+          // Only increment category for new /cloud commands, not edits
+          if (isNewMessage) {
+            setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
+            setProcessedMessages((prev) => ({
+              ...prev,
+              [messageId]: { content: messageText, category: String(currentCategoryIndex), editedAt },
+            }));
+          }
           return; // Skip to the next message
         }
 
-        // --- Process regular message ---
-        const currentCategory = String(currentCategoryIndex); // Use current index as category string
+        // --- Handle edited message: remove old words first ---
+        if (isEdited && existingMessage) {
+          const oldWords = extractWords(existingMessage.content);
+          const oldCategory = existingMessage.category;
+
+          if (oldWords.length > 0) {
+            // Decrement GLOBAL word counts for old words
+            setWordCounts((prevGlobalCounts) => {
+              const newGlobalCounts = { ...prevGlobalCounts };
+              oldWords.forEach((word) => {
+                if (newGlobalCounts[word]) {
+                  newGlobalCounts[word] -= 1;
+                  if (newGlobalCounts[word] <= 0) {
+                    delete newGlobalCounts[word];
+                  }
+                }
+              });
+              return newGlobalCounts;
+            });
+
+            // Decrement CATEGORIZED word counts for old words
+            setCategorizedWordCounts((prevCategorizedCounts) => {
+              const newCategorizedCounts = { ...prevCategorizedCounts };
+              if (newCategorizedCounts[oldCategory]) {
+                oldWords.forEach((word) => {
+                  if (newCategorizedCounts[oldCategory][word]) {
+                    newCategorizedCounts[oldCategory][word] -= 1;
+                    if (newCategorizedCounts[oldCategory][word] <= 0) {
+                      delete newCategorizedCounts[oldCategory][word];
+                    }
+                  }
+                });
+                // Remove category if empty
+                if (Object.keys(newCategorizedCounts[oldCategory]).length === 0) {
+                  delete newCategorizedCounts[oldCategory];
+                }
+              }
+              return newCategorizedCounts;
+            });
+          }
+        }
+
+        // --- Process message (new or edited) ---
+        const currentCategory = isEdited && existingMessage ? existingMessage.category : String(currentCategoryIndex);
         const words = extractWords(messageText);
+
+        // Update processed messages state
+        setProcessedMessages((prev) => ({
+          ...prev,
+          [messageId]: { content: messageText, category: currentCategory, editedAt },
+        }));
 
         if (words.length > 0) {
           // Update GLOBAL word counts

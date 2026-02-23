@@ -4,9 +4,12 @@ import { IntlShape } from 'react-intl';
 export interface ChatMessage {
   messageId: string;
   message: string;
+  messageType: string;
   senderId: string;
   senderName: string;
   createdAt: number;
+  editedAt: string | null;
+  deletedAt: string | null;
 }
 
 export interface PublicChatMessagesData {
