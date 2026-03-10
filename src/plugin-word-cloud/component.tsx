@@ -21,7 +21,8 @@ interface WordData extends cloud.Word {
 
 // Regex to match various emoji presentations, including flags and variation selectors
 // Using Unicode property escapes: \p{Emoji_Presentation}, \p{Emoji} with VS16, Regional Indicators for flags
-const emojiIsolatingRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}\p{Regional_Indicator})+|\p{Emoji})/gu;
+// More restrictive to avoid matching Unicode numbers
+const emojiIsolatingRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}){2})/gu;
 
 // More restrictive URL regex - matches common URL patterns
 const urlRegex = /^(https?:\/\/|ftp:\/\/|www\.)/i;
@@ -31,7 +32,7 @@ const urlRegex = /^(https?:\/\/|ftp:\/\/|www\.)/i;
 const validWordRegex = /^[\p{L}\p{M}]+$/u;
 
 // Regex to check if a string is an emoji (simple check)
-const isEmojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}\p{Regional_Indicator})+)$/u;
+const isEmojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)$/u;
 
 // Minimum word length to include (helps filter out noise)
 const MIN_WORD_LENGTH = 2;
@@ -54,6 +55,9 @@ const extractWords = (text: string): string[] => {
       if (token.length === 0) return false;
       // Filter out URLs BEFORE removing punctuation
       if (urlRegex.test(token)) return false;
+      // Reject tokens where letters are preceded or succeeded by numbers
+      // e.g., "3test", "test3", "te3st", "3test3"
+      if (/\d[a-zA-Z]|[a-zA-Z]\d/.test(token)) return false;
       return true;
     })
     .map((token) => {
