@@ -36,6 +36,8 @@ const isEmojiRegex = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)$/u;
 
 // Minimum word length to include (helps filter out noise)
 const MIN_WORD_LENGTH = 2;
+// Maximum word length to include (avoids very long words that don't fit well)
+const MAX_WORD_LENGTH = 30;
 
 const extractWords = (text: string): string[] => {
   if (!text) return [];
@@ -71,6 +73,8 @@ const extractWords = (text: string): string[] => {
       if (isEmojiRegex.test(word)) return true;
       // Require minimum length for words
       if (word.length < MIN_WORD_LENGTH) return false;
+      // Reject words exceeding maximum length
+      if (word.length > MAX_WORD_LENGTH) return false;
       // Only allow words that contain at least one letter (filters out pure numbers/symbols)
       return validWordRegex.test(word);
     });
