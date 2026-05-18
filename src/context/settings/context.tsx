@@ -9,7 +9,7 @@ import {
 import { pluginLogger } from 'bigbluebutton-html-plugin-sdk';
 import { ClientSettings } from '../types';
 
-const SETTINGS_NAME = 'WordCloudPlugin';
+const SETTINGS_NAME = 'PluginWordCloud';
 
 type SettingsContextType = {
   panelImageUrl: string | null;
