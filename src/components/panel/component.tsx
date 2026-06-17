@@ -5,6 +5,7 @@ import {
   BBBTypography,
   BBBDivider,
 } from 'bbb-ui-components-react';
+import { pluginLogger } from 'bigbluebutton-html-plugin-sdk';
 import { PanelProps } from './types';
 import Styled from './styles';
 import { intlMessages } from '../../intlMessages';
@@ -12,6 +13,7 @@ import { usePanelImageUrl } from '../../context/settings/context';
 
 function Panel({
   intl,
+  pluginApi,
   isActive,
   currentStartFromNow,
   syncedStartFromNow,
@@ -34,10 +36,16 @@ function Panel({
       startFromNow,
     };
     onStartStop(payload);
+    pluginLogger.info({
+      logCode: 'plg_started',
+    }, `Plugin started: ${pluginApi.pluginName}`);
   };
 
   const handleStop = () => {
     onStartStop({ message: 'stop' });
+    pluginLogger.info({
+      logCode: 'plg_stopped',
+    }, `Plugin stopped: ${pluginApi.pluginName}`);
   };
 
   const renderModeratorContent = () => {
