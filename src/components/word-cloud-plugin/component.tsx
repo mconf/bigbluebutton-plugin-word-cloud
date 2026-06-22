@@ -134,6 +134,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
               <SettingsProvider>
                 <Panel
                   intl={intlRef.current}
+                  pluginApi={pluginApi}
                   isActive={isActiveRef.current}
                   currentStartFromNow={currentStartFromNowRef.current}
                   syncedStartFromNow={syncedStartFromNowRef.current}
@@ -158,7 +159,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     }
 
     prevCurrentUserRef.current = currentUser;
-  }, [currentUser, stableDispatcher, stableSettingsDispatcher]);
+  }, [currentUser, stableDispatcher, stableSettingsDispatcher, pluginApi]);
 
   // STABLE content function for sidekick - created ONCE and stored in ref
   const sidekickContentFunctionRef = useRef<((element: HTMLElement) => ReactDOM.Root) | null>(null);
@@ -171,6 +172,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
           <SettingsProvider>
             <Panel
               intl={intlRef.current}
+              pluginApi={pluginApi}
               isActive={isActiveRef.current}
               currentStartFromNow={currentStartFromNowRef.current}
               syncedStartFromNow={syncedStartFromNowRef.current}
@@ -232,6 +234,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
             <SettingsProvider>
               <Panel
                 intl={intl}
+                pluginApi={pluginApi}
                 isActive={isActive}
                 currentStartFromNow={currentStartFromNow}
                 syncedStartFromNow={syncedStartFromNow}
@@ -256,6 +259,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     currentUser,
     currentUser?.role,
     currentUser?.presenter,
+    pluginApi,
   ]);
 
   // Effect to update main area content
