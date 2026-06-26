@@ -2,11 +2,14 @@
     "compilerOptions": {
         "outDir": "./dist-tsc/",
         "noImplicitAny": true,
+        "skipLibCheck": true,
         "module": "es6",
-        "target": "es6", // Changed from es5 to es6
+        "target": "es2021",
         "jsx": "react",
         "allowJs": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true
     },
     "include": ["src/**/*"], // Update to include subdirectories
     "paths": {
