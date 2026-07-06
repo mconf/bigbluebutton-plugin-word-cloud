@@ -61,6 +61,7 @@ const extractWords = (text: string): string[] => {
       if (/\d[a-zA-Z]|[a-zA-Z]\d/.test(token)) return false;
       return true;
     })
+    // Remove common punctuation from each word (including parentheses, brackets, etc.)
     // eslint-disable-next-line no-useless-escape
     .map((token) => token.replace(/[.,!?;:()[\]{}'"<>*#@&^%$~`\\|/+=_-]/g, ''))
     .filter((word) => {

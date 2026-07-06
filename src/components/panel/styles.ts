@@ -51,7 +51,7 @@ const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.75rem;
+  gap: 1rem;
   margin-top: auto;
   padding-top: 1rem;
 `;
