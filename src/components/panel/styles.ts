@@ -58,16 +58,27 @@ const ButtonsContainer = styled.div`
 
 const ButtonRow = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100%;
   gap: 0.75rem;
 `;
 
 const ButtonWrapper = styled.div`
+  flex: 1;
+  min-width: 0;
   display: flex;
 
   > * {
     width: 100%;
+    min-width: 0;
+  }
+
+  button span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 `;
 

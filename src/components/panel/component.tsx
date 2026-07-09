@@ -96,20 +96,20 @@ function Panel({
             <Styled.ButtonRow>
               <Styled.ButtonWrapper>
                 <BBButton
-                  label={intl.formatMessage(intlMessages.startButton)}
-                  variant="primary"
-                  color="default"
-                  onClick={handleStart}
-                  disabled={isActive}
-                />
-              </Styled.ButtonWrapper>
-              <Styled.ButtonWrapper>
-                <BBButton
                   label={intl.formatMessage(intlMessages.stopButton)}
                   variant="primary"
                   color="danger"
                   onClick={handleStop}
                   disabled={!isActive}
+                />
+              </Styled.ButtonWrapper>
+              <Styled.ButtonWrapper>
+                <BBButton
+                  label={intl.formatMessage(intlMessages.startButton)}
+                  variant="primary"
+                  color="default"
+                  onClick={handleStart}
+                  disabled={isActive}
                 />
               </Styled.ButtonWrapper>
             </Styled.ButtonRow>
