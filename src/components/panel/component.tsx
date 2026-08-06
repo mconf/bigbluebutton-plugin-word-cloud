@@ -4,7 +4,7 @@ import {
   BBBToggle,
   BBBTypography,
   BBBDivider,
-} from '@mconf/bbb-ui-components-react';
+} from '@bigbluebutton/bbb-ui-components-react';
 import { pluginLogger } from 'bigbluebutton-html-plugin-sdk';
 import { PanelProps } from './types';
 import Styled from './styles';
