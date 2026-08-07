@@ -58,35 +58,18 @@ const ButtonsContainer = styled.div`
 
 const ButtonRow = styled.div`
   display: flex;
-  flex-flow: row wrap;
   width: 100%;
-  gap: 0.75rem;
+  gap: 1rem;
+  /* Buttons stack once they no longer fit side by side in the panel */
+  flex-wrap: wrap;
 `;
 
 const ButtonWrapper = styled.div`
-  /*
-   * The row breaks into a stacked column below a panel width of 2 * 8rem + gap,
-   * so a narrow panel stacks the buttons instead of squeezing them. The
-   * max-content basis keeps the same break working for translations whose
-   * labels are wider than the 8rem floor, and min() caps the floor at the row's
-   * own width so a very narrow panel still shrinks instead of overflowing.
-   */
-  flex: 1 1 max-content;
-  min-width: min(8rem, 100%);
+  flex: 1;
   display: flex;
 
   > * {
     width: 100%;
-    min-width: 0;
-  }
-
-  /* Last resort: a label wider than the whole panel still gets ellipsized. */
-  button span {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
   }
 `;
 
