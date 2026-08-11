@@ -4,7 +4,7 @@ import {
   BBBToggle,
   BBBTypography,
   BBBDivider,
-} from 'bbb-ui-components-react';
+} from '@bigbluebutton/bbb-ui-components-react';
 import { pluginLogger } from 'bigbluebutton-html-plugin-sdk';
 import { PanelProps } from './types';
 import Styled from './styles';
@@ -93,20 +93,26 @@ function Panel({
 
           <Styled.ButtonsContainer>
             <BBBDivider />
-            <BBButton
-              label={intl.formatMessage(intlMessages.startButton)}
-              variant="primary"
-              color="default"
-              onClick={handleStart}
-              disabled={isActive}
-            />
-            <BBButton
-              label={intl.formatMessage(intlMessages.stopButton)}
-              variant="primary"
-              color="danger"
-              onClick={handleStop}
-              disabled={!isActive}
-            />
+            <Styled.ButtonRow>
+              <Styled.ButtonWrapper>
+                <BBButton
+                  label={intl.formatMessage(intlMessages.stopButton)}
+                  variant="primary"
+                  color="danger"
+                  onClick={handleStop}
+                  disabled={!isActive}
+                />
+              </Styled.ButtonWrapper>
+              <Styled.ButtonWrapper>
+                <BBButton
+                  label={intl.formatMessage(intlMessages.startButton)}
+                  variant="primary"
+                  color="default"
+                  onClick={handleStart}
+                  disabled={isActive}
+                />
+              </Styled.ButtonWrapper>
+            </Styled.ButtonRow>
           </Styled.ButtonsContainer>
         </Styled.SectionContent>
       </Styled.Section>

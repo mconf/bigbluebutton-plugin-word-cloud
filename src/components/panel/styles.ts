@@ -50,9 +50,27 @@ const AttendeeContent = styled.div`
 const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
   margin-top: auto;
   padding-top: 1rem;
+`;
+
+const ButtonRow = styled.div`
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  /* Buttons stack once they no longer fit side by side in the panel */
+  flex-wrap: wrap;
+`;
+
+const ButtonWrapper = styled.div`
+  flex: 1;
+  display: flex;
+
+  > * {
+    width: 100%;
+  }
 `;
 
 const StatusIndicator = styled.div<{ isActive: boolean }>`
@@ -103,6 +121,8 @@ export default {
   SectionContent,
   AttendeeContent,
   ButtonsContainer,
+  ButtonRow,
+  ButtonWrapper,
   StatusIndicator,
   StatusDot,
   StatusText,

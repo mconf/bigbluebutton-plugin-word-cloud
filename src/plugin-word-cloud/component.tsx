@@ -2,12 +2,10 @@ import * as React from 'react';
 import { useEffect, useState, useRef } from 'react'; // Removed useMemo, added useRef
 import * as d3 from 'd3';
 import * as cloud from 'd3-cloud'; // Changed to namespace import
-import { scaleOrdinal } from 'd3-scale'; // Using d3-scale for colors potentially
 import { intlMessages } from '../intlMessages';
 
 import {
   PublicChatMessagesData,
-  ChatMessage,
   PluginWordCloudProps,
 } from './types';
 import { PUBLIC_CHAT_MESSAGES_SUBSCRIPTION } from './queries';
@@ -20,6 +18,7 @@ interface WordData extends cloud.Word {
 }
 
 // Regex to match various emoji presentations, including flags and variation selectors
+// eslint-disable-next-line max-len
 // Using Unicode property escapes: \p{Emoji_Presentation}, \p{Emoji} with VS16, Regional Indicators for flags
 // More restrictive to avoid matching Unicode numbers
 const emojiIsolatingRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F|(?:\p{Regional_Indicator}){2})/gu;
@@ -62,10 +61,9 @@ const extractWords = (text: string): string[] => {
       if (/\d[a-zA-Z]|[a-zA-Z]\d/.test(token)) return false;
       return true;
     })
-    .map((token) => {
-      // Remove common punctuation from each word (including parentheses, brackets, etc.)
-      return token.replace(/[.,!?;:()[\]{}'"<>*#@&^%$~`\\|/+=_-]/g, '');
-    })
+    // Remove common punctuation from each word (including parentheses, brackets, etc.)
+    // eslint-disable-next-line no-useless-escape
+    .map((token) => token.replace(/[.,!?;:()[\]{}'"<>*#@&^%$~`\\|/+=_-]/g, ''))
     .filter((word) => {
       // Filter out empty strings after punctuation removal
       if (word.length === 0) return false;
@@ -87,8 +85,10 @@ React.ReactElement<PluginWordCloudProps> {
   // State to store GLOBAL word counts (for font size)
   const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
   // State to store word counts PER CATEGORY (minute) (for layout grouping)
+  // eslint-disable-next-line max-len
   const [categorizedWordCounts, setCategorizedWordCounts] = useState<Record<string, Record<string, number>>>({});
   // State to keep track of processed messages with their content and category (to handle edits)
+  // eslint-disable-next-line max-len
   const [processedMessages, setProcessedMessages] = useState<Record<string, { content: string; category: string; editedAt: string | null }>>({});
   // State to track the current category index, incremented by "/cloud"
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState<number>(0);
@@ -125,7 +125,9 @@ React.ReactElement<PluginWordCloudProps> {
         }
 
         // Destructure needed fields
-        const { messageId, message: messageText, editedAt, deletedAt, messageType } = message;
+        const {
+          messageId, message: messageText, editedAt, deletedAt, messageType,
+        } = message;
 
         // Check if this message was already processed
         const existingMessage = processedMessages[messageId];
@@ -220,6 +222,7 @@ React.ReactElement<PluginWordCloudProps> {
             setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
             setProcessedMessages((prev) => ({
               ...prev,
+              // eslint-disable-next-line max-len
               [messageId]: { content: messageText, category: String(currentCategoryIndex), editedAt },
             }));
           }
@@ -269,6 +272,7 @@ React.ReactElement<PluginWordCloudProps> {
         }
 
         // --- Process message (new or edited) ---
+        // eslint-disable-next-line max-len
         const currentCategory = isEdited && existingMessage ? existingMessage.category : String(currentCategoryIndex);
         const words = extractWords(messageText);
 
@@ -296,13 +300,13 @@ React.ReactElement<PluginWordCloudProps> {
               newCategorizedCounts[currentCategory] = {};
             }
             words.forEach((word) => {
+              // eslint-disable-next-line max-len
               newCategorizedCounts[currentCategory][word] = (newCategorizedCounts[currentCategory][word] || 0) + 1;
             });
             return newCategorizedCounts;
           });
         }
       });
-
     }
     // Depend only on the subscription data
   }, [subscriptionResponse.data]); // Removed processedMessageIds from dependencies
@@ -314,17 +318,9 @@ React.ReactElement<PluginWordCloudProps> {
   const maxFontSize = 120;
   // Color parameters removed - will use d3.schemeCategory10
 
-  // Calculate min and max counts for normalization (still needed for font size)
-  const counts = Object.values(wordCounts);
-  const minCount = counts.length > 0 ? Math.min(...counts) : 1;
-  const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
-
-  // Define a categorical color scale using a bright scheme suitable for dark backgrounds
-  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-
   // Effect to setup ResizeObserver for responsive layout
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current) return undefined;
 
     const resizeObserver = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return;
@@ -351,7 +347,7 @@ React.ReactElement<PluginWordCloudProps> {
     const [width, height] = dimensions; // Get current dimensions from state
 
     if (!svgRef.current || width === 0 || height === 0) {
-      return; // Don't run if ref isn't ready or dimensions are zero
+      return undefined; // Don't run if ref isn't ready or dimensions are zero
     }
 
     if (Object.keys(wordCounts).length === 0) {
@@ -376,7 +372,7 @@ React.ReactElement<PluginWordCloudProps> {
         .style('text-anchor', 'middle') // Center text horizontally
         .text(intl.formatMessage(intlMessages.startTyping)); // Use intl for message
 
-      return; // Exit after drawing placeholder
+      return undefined; // Exit after drawing placeholder
     }
 
     // --- Proceed with Word Cloud Drawing ---
@@ -391,7 +387,7 @@ React.ReactElement<PluginWordCloudProps> {
 
     // Ensure layout dimensions are not negative
     if (layoutWidth <= 0 || layoutHeight <= 0) {
-      return;
+      return undefined;
     }
 
     // --- Dynamic Font Size Calculation ---
@@ -420,6 +416,7 @@ React.ReactElement<PluginWordCloudProps> {
         return (effectiveMinFontSize + maxFontSize) / 2;
       }
       // Linear interpolation between effectiveMinFontSize and maxFontSize
+      // eslint-disable-next-line max-len
       const size = effectiveMinFontSize + ((count - minCount) / (maxCount - minCount)) * (maxFontSize - effectiveMinFontSize);
       // Clamp within the dynamic bounds (effectiveMinFontSize to maxFontSize)
       return Math.max(effectiveMinFontSize, Math.min(size, maxFontSize));
@@ -429,7 +426,7 @@ React.ReactElement<PluginWordCloudProps> {
     // Each entry represents a unique word within a specific category (minute)
     const wordsData: WordData[] = [];
     Object.entries(categorizedWordCounts).forEach(([category, wordsInCategory]) => {
-      Object.entries(wordsInCategory).forEach(([wordText, countInCategory]) => {
+      Object.entries(wordsInCategory).forEach(([wordText]) => {
         // Get the GLOBAL count for font size calculation
         const globalCount = wordCounts[wordText] || 1; // Fallback to 1 if somehow missing
         wordsData.push({
@@ -458,7 +455,7 @@ React.ReactElement<PluginWordCloudProps> {
 
     if (numCategories === 0) {
       // Potentially draw placeholder or clear SVG if needed, though handled earlier
-      return;
+      return undefined;
     }
 
     // Calculate grid dimensions
@@ -468,7 +465,6 @@ React.ReactElement<PluginWordCloudProps> {
     const cellHeight = layoutHeight / rows;
 
     const allLayoutPromises: Promise<WordData[]>[] = [];
-    const allPositionedWords: WordData[] = []; // Array to collect results
 
     categories.forEach((category, index) => {
       const categoryWords = wordsByCategory[category];
@@ -484,7 +480,7 @@ React.ReactElement<PluginWordCloudProps> {
           .size([cellWidth, cellHeight])
           .words(categoryWords) // Pass only words for this category
           .padding(1) // Maybe smaller padding within cells
-          .rotate(() => (~~(Math.random() * 6) - 3) * 15) // Less rotation?
+          .rotate(() => (Math.floor(Math.random() * 6) - 3) * 15) // Less rotation?
           .font('Tahoma')
           .fontSize((d) => d.size || 10) // Use size from WordData
           .on('end', (positionedWords: WordData[]) => {
@@ -500,13 +496,6 @@ React.ReactElement<PluginWordCloudProps> {
       });
       allLayoutPromises.push(layoutPromise);
     });
-
-    // Wait for all category layouts to complete
-    Promise.all(allLayoutPromises).then((results) => {
-      const combinedWords = results.flat(); // Combine words from all categories
-      draw(combinedWords, width, height, margin); // Call draw with all positioned words
-    });
-    // --- End Category-Based Layout ---
 
     // Helper function to ensure color is not too dark
     const ensureLightColor = (colorString: string): string => {
@@ -529,8 +518,7 @@ React.ReactElement<PluginWordCloudProps> {
 
     // Draw function: Renders the words using D3, now receives dimensions/margin
     // This function remains largely the same, but now receives words already positioned globally
-    function draw(words: WordData[], svgWidth: number, svgHeight: number, svgMargin: number) {
-
+    const draw = (words: WordData[], svgWidth: number, svgHeight: number, svgMargin: number) => {
       // Select the container, ensure SVG exists, or create it
       const svg = d3.select(svgRef.current)
         .selectAll<SVGSVGElement, unknown>('svg') // Use selectAll for potential existing SVG
@@ -589,7 +577,14 @@ React.ReactElement<PluginWordCloudProps> {
         .duration(1600) // Match previous transition duration
         .style('fill-opacity', 1)
         .attr('font-size', (d: WordData) => `${d.size}px`); // Add type WordData
-    }
+    };
+
+    // Wait for all category layouts to complete
+    Promise.all(allLayoutPromises).then((results) => {
+      const combinedWords = results.flat(); // Combine words from all categories
+      draw(combinedWords, width, height, margin); // Call draw with all positioned words
+    });
+    // --- End Category-Based Layout ---
 
     // Cleanup function for when the component unmounts or dependencies change
     return () => {
@@ -597,6 +592,7 @@ React.ReactElement<PluginWordCloudProps> {
       //   layoutInstance.stop(); // Stop the layout process if it's still running
       // }
     };
+  // eslint-disable-next-line max-len
   }, [wordCounts, categorizedWordCounts, dimensions]); // Re-run effect when counts or dimensions change
 
   // --- Rendering Logic ---

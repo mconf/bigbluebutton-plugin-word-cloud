@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import {
+  useEffect, useRef, useMemo, useCallback, useState,
+} from 'react';
 import * as ReactDOM from 'react-dom/client';
 import {
   GenericContentSidekickArea,
@@ -303,9 +305,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     }
 
     const generatedIds = pluginApi.setGenericContentItems(items);
-    sidekickContentId.current = generatedIds[0];
+    [sidekickContentId.current] = generatedIds;
     if (isActiveRef.current && generatedIds.length > 1) {
-      mainAreaContentId.current = generatedIds[1];
+      [, mainAreaContentId.current] = generatedIds;
     }
 
     isInitializedRef.current = true;
@@ -338,9 +340,9 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
     }
 
     const generatedIds = pluginApi.setGenericContentItems(items);
-    sidekickContentId.current = generatedIds[0];
+    [sidekickContentId.current] = generatedIds;
     if (isActiveRef.current && generatedIds.length > 1) {
-      mainAreaContentId.current = generatedIds[1];
+      [, mainAreaContentId.current] = generatedIds;
     }
   }, [roleChangeCounter, titleMessage, pluginApi]);
 
@@ -368,8 +370,8 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
       });
 
       const newIds = pluginApi.setGenericContentItems([sidekickArea, mainArea]);
-      sidekickContentId.current = newIds[0];
-      mainAreaContentId.current = newIds[1];
+      [sidekickContentId.current] = newIds;
+      [, mainAreaContentId.current] = newIds;
     }
 
     // Transition: active -> inactive
@@ -396,7 +398,7 @@ function WordCloudPlugin({ pluginApi, intl }: WordCloudPluginProps): React.React
         });
 
         const newIds = pluginApi.setGenericContentItems([sidekickArea]);
-        sidekickContentId.current = newIds[0];
+        [sidekickContentId.current] = newIds;
         mainAreaContentId.current = undefined;
       }, FADE_DURATION);
     }
